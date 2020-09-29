@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies {
-	val spekVersion = "2.0.12"
+	val spekVersion = "2.0.13"
 	val atriumVersion = "0.13.0"
 
 	testImplementation(gradleTestKit())
