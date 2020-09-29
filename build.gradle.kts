@@ -20,7 +20,8 @@ allprojects {
 }
 
 group = "de.joshuagleitze"
-version = if (isSnapshot) versionDetails.gitHash else versionDetails.lastTag.drop("v")
+val gitRef = if (isSnapshot) versionDetails.gitHash else versionDetails.lastTag
+version = if (isSnapshot) gitRef else gitRef.drop("v")
 status = if (isSnapshot) "snapshot" else "release"
 
 val ossrhUsername: String? by project
@@ -44,6 +45,7 @@ subprojects {
 		if (plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
 			tasks.test {
 				useJUnitPlatform()
+				reports.junitXml.isEnabled = true
 			}
 
 			java {
@@ -78,10 +80,14 @@ subprojects {
 			tasks.withType<DokkaTask> {
 				dokkaSourceSets.named("main") {
 					sourceLink {
+						val projectPath = projectDir.absoluteFile.relativeTo(rootProject.projectDir.absoluteFile)
 						localDirectory.set(file("src/main/kotlin"))
-						remoteUrl.set(uri("https://github.com/$githubRepository/blob/master/src/main/kotlin").toURL())
+						remoteUrl.set(uri("https://github.com/$githubRepository/blob/$gitRef/$projectPath/src/main/kotlin").toURL())
 						remoteLineSuffix.set("#L")
 					}
+					externalDocumentationLink("https://docs.gradle.org/current/javadoc/")
+					val atriumVersion: String by project
+					externalDocumentationLink("https://docs.atriumlib.org/$atriumVersion/doc/")
 				}
 			}
 
