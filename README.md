@@ -1,3 +1,3 @@
-# atrium-gradle
+# atrium-gradle-testkit
 
-[Atrium](https://github.com/robstoll/atrium) matchers to test [Gradle Plugins](https://guides.gradle.org/testing-gradle-plugins/).
+[Atrium](https://github.com/robstoll/atrium) assertions to test [Gradle plugins with TestKit](https://docs.gradle.org/current/userguide/test_kit.html).
