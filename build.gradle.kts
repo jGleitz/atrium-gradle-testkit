@@ -42,16 +42,8 @@ subprojects {
 
 	afterEvaluate {
 		if (plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
-			apply {
-				plugin("org.jetbrains.dokka")
-				plugin("de.marcphilipp.nexus-publish")
-				plugin("org.gradle.maven-publish")
-				plugin("org.gradle.signing")
-			}
-
-			tasks.withType<Test> {
+			tasks.test {
 				useJUnitPlatform()
-				reports.junitXml.isEnabled = true
 			}
 
 			java {
@@ -69,6 +61,13 @@ subprojects {
 		}
 
 		if (willBePublished) {
+			apply {
+				plugin("org.jetbrains.dokka")
+				plugin("de.marcphilipp.nexus-publish")
+				plugin("org.gradle.maven-publish")
+				plugin("org.gradle.signing")
+			}
+
 			val sourcesJar by tasks.registering(Jar::class) {
 				group = "build"
 				description = "Assembles the source code into a jar"
