@@ -3,6 +3,7 @@ rootProject.name = "atrium-gradle-testkit"
 include(
 	"api-spec",
 	"apis:fluent-en",
+	"example-project",
 	"logic",
 	"translations:en"
 )
