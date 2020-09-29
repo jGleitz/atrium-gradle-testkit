@@ -2,6 +2,8 @@
 
 [Atrium](https://github.com/robstoll/atrium) assertions to test [Gradle plugins with TestKit](https://docs.gradle.org/current/userguide/test_kit.html).
 
+[:point_right: **Documentation of all assertions**](https://jgleitz.github.io/atrium-gradle-testkit/apis/atrium-gradle-testkit-fluent-en/atrium-gradle-testkit-fluent-en/de.joshuagleitze.test.gradle/)
+
 ## Example
 
 Here is how you can use this library to test Gradle plugins.
