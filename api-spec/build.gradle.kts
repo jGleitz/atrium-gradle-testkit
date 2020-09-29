@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-	val spekVersion = "2.0.12"
-	val atriumVersion = "0.13.0"
+	val spekVersion: String by project
+	val atriumVersion: String by project
 
 	api(name = "atrium-specs", version = atriumVersion, group = "ch.tutteli.atrium")
 	implementation(gradleTestKit())
