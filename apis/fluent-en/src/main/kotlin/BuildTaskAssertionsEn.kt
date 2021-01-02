@@ -18,7 +18,7 @@ import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
  * the command line, or that it was a (transitive) dependency of another task that was explicitly invoked in the command line.
  * @return An [Expect] with the non-nullable type [BuildTask] (was `BuildTask?` before).
  */
-public fun Expect<BuildTask?>.wasInvoked(): Expect<BuildTask> = _logic.wasInvoked().getExpectOfFeature()
+public fun Expect<BuildTask?>.wasInvoked(): Expect<BuildTask> = _logic.wasInvoked().transform()
 
 /**
  * Expects that the subject of the assertion (a [Gradle task][BuildTask]) was invoked and adds all assertions created by [assertionCreator] to the
@@ -29,14 +29,14 @@ public fun Expect<BuildTask?>.wasInvoked(): Expect<BuildTask> = _logic.wasInvoke
  * @throws AssertionError If [assertionCreator] creates no assertions or throws an [AssertionError] itself.
  */
 public fun Expect<BuildTask?>.wasInvoked(assertionCreator: Expect<BuildTask>.() -> Unit): Expect<BuildTask?> =
-	_logic.wasInvoked().addToInitial(assertionCreator)
+	_logic.wasInvoked().collectAndAppend(assertionCreator)
 
 /**
  * Expects that the subject of the assertion (a [Gradle task][BuildTask]) was not invoked. This means that it was not invoked explicitly in the
  * command line, and that it was not a (transitive) dependency of any other task that was explicitly invoked in the command line.
  * @return An (unusable) [Expect] for [Unit] because there is no task to execute further assertions on.
  */
-public fun Expect<BuildTask?>.wasNotInvoked(): Expect<Unit> = _logic.wasNotInvoked().getExpectOfFeature()
+public fun Expect<BuildTask?>.wasNotInvoked(): Expect<Unit> = _logic.wasNotInvoked().transform()
 
 /**
  * Expects that the subject of the assertion (a [Gradle task][BuildTask]) [was invoked][wasInvoked] and that its [outcome][BuildTask.getOutcome] was
