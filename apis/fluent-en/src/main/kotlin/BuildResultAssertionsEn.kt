@@ -13,7 +13,7 @@ import org.gradle.testkit.runner.BuildTask
  * @return The newly created [Expect] for the [output][BuildResult.getOutput] of the this assertion’s [BuildResult].
  */
 public val Expect<BuildResult>.output: Expect<String>
-	get() = _logic.output().getExpectOfFeature()
+	get() = _logic.output().transform()
 
 /**
  * Adds all assertions created by [assertionCreator] to the [Expect] for the for the [output][BuildResult.getOutput] of the subject of this
@@ -23,7 +23,7 @@ public val Expect<BuildResult>.output: Expect<String>
  * @throws AssertionError If [assertionCreator] creates no assertions or throws an [AssertionError] itself.
  */
 public fun Expect<BuildResult>.output(assertionCreator: Expect<String>.() -> Unit): Expect<BuildResult> =
-	_logic.output().addToInitial(assertionCreator)
+	_logic.output().collectAndAppend(assertionCreator)
 
 /**
  * Creates an [Expect] for the [task][BuildTask] with the given [path] of the subject of this assertion.
@@ -32,4 +32,4 @@ public fun Expect<BuildResult>.output(assertionCreator: Expect<String>.() -> Uni
  *
  * @return The newly created [Expect] for the [task][BuildTask] named “[path]” of the this assertion’s [BuildResult].
  */
-public fun Expect<BuildResult>.task(path: String): Expect<BuildTask?> = _logic.task(path).getExpectOfFeature()
+public fun Expect<BuildResult>.task(path: String): Expect<BuildTask?> = _logic.task(path).transform()

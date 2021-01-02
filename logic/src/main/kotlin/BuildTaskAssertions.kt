@@ -30,8 +30,8 @@ fun AssertionContainer<BuildTask?>.wasNotInvoked() = changeSubject.reportBuilder
 fun AssertionContainer<BuildTask>.outcome() = manualFeature(OUTCOME) { outcome }
 
 fun AssertionContainer<BuildTask?>.hadOutcome(outcome: TaskOutcome) =
-	wasInvoked().addToFeature {
-		_logic.outcome().addToInitial {
+	wasInvoked().transformAndAppend {
+		_logic.outcome().transformAndAppend {
 			_logicAppend { toBe(outcome) }
 		}
 	}
