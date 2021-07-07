@@ -11,5 +11,5 @@ dependencies {
 	implementation(project(":translations:${rootProject.name}-translation-en"))
 	implementation(name = "atrium-fluent-en_GB", version = atriumVersion, group = "ch.tutteli.atrium")
 	implementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
-	implementation(name = "spek-testfiles", version = "1.0.3", group = "de.joshuagleitze")
+	implementation(name = "spek-testfiles", version = "2.0.0", group = "de.joshuagleitze")
 }
