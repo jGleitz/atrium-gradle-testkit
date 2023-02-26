@@ -11,11 +11,19 @@ plugins {
 	id("io.codearte.nexus-staging") version "0.30.0"
 	`maven-publish`
 	signing
+	idea
 }
 
 allprojects {
+	plugins.apply("org.gradle.idea")
 	repositories {
 		mavenCentral()
+	}
+	idea {
+		module {
+			isDownloadJavadoc = true
+			isDownloadSources = true
+		}
 	}
 }
 
