@@ -11,11 +11,19 @@ plugins {
 	id("io.codearte.nexus-staging") version "0.30.0"
 	`maven-publish`
 	signing
+	idea
 }
 
 allprojects {
+	plugins.apply("org.gradle.idea")
 	repositories {
 		mavenCentral()
+	}
+	idea {
+		module {
+			isDownloadJavadoc = true
+			isDownloadSources = true
+		}
 	}
 }
 
@@ -45,7 +53,7 @@ subprojects {
 		if (plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
 			tasks.test {
 				useJUnitPlatform()
-				reports.junitXml.isEnabled = true
+				reports.junitXml.required.set(true)
 			}
 
 			java {
@@ -168,8 +176,8 @@ subprojects {
 				}
 			}
 
-			val publishToGithub = tasks.named("publishAllPublicationsTo${githubPackages.name.capitalize()}Repository")
-			val publishToMavenCentral = tasks.named("publishTo${mavenCentral.name.capitalize()}")
+			val publishToGithub = tasks.named("publishAllPublicationsTo${githubPackages.name.firstUpper()}Repository")
+			val publishToMavenCentral = tasks.named("publishTo${mavenCentral.name.firstUpper()}")
 
 			signing {
 				val signingKey: String? by project
@@ -209,5 +217,6 @@ subprojects {
 
 val Project.isSnapshot get() = versionDetails.commitDistance != 0
 fun String.drop(prefix: String) = if (this.startsWith(prefix)) this.drop(prefix.length) else this
+fun String.firstUpper() = this.replaceFirstChar { it.titlecase() }
 val Project.versionDetails get() = (this.extra["versionDetails"] as groovy.lang.Closure<*>)() as com.palantir.gradle.gitversion.VersionDetails
 val Project.willBePublished get() = this.extra.properties["willBePublished"] as Boolean? ?: false
