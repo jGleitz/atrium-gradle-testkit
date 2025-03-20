@@ -4,7 +4,7 @@ import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-	kotlin("jvm") version "1.9.25"
+	kotlin("jvm") version "2.1.20"
 	id("com.palantir.git-version") version "3.1.0"
 	id("org.jetbrains.dokka") version "1.9.20"
 	id("de.marcphilipp.nexus-publish") version "0.4.0"
