@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	kotlin("jvm") version "1.9.25"
-	id("com.palantir.git-version") version "3.3.0"
+	id("com.palantir.git-version") version "3.4.0"
 	id("org.jetbrains.dokka") version "1.9.20"
 	id("de.marcphilipp.nexus-publish") version "0.4.0"
 	id("io.codearte.nexus-staging") version "0.30.0"
