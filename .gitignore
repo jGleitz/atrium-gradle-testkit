@@ -4,3 +4,7 @@ build/
 
 ### IntelliJ
 /.idea/
+
+### Agent tooling (opencode/omo session files, not for VCS)
+/.omo/
+/.codegraph/
