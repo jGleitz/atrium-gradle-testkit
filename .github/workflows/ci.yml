@@ -44,19 +44,3 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: '**/build/test-results/test/TEST-*.xml'
           check_name: Test Failures (${{ matrix.java-version }})
-
-  release:
-    name: Release Check
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7.0.1
-      - name: Setup Node.js
-        uses: actions/setup-node@v7.0.0
-        with:
-          node-version: lts/*
-      - name: Release Check
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_GITHUB_TOKEN }}
-        run: npx semantic-release
