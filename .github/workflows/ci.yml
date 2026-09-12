@@ -30,7 +30,7 @@ jobs:
         uses: actions/setup-java@v5.7.0
         with:
           java-version: ${{ matrix.java-version }}
-          distribution: adopt
+          distribution: temurin
       - name: Prepare
         run: ./gradlew clean dependencies
       - name: Build
