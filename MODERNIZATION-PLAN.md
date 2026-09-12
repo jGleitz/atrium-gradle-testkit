@@ -2,7 +2,7 @@
 
 > **Coordinator**: Sisyphus (AI)
 > **Last Updated**: 2026-09-12
-> **Status**: Phase 0-1 in progress on branch `modernize/no-release-pipeline`
+> **Status**: Phase 0 - Setup
 
 This document persists the modernization work for this project. Any agent can pick up where the previous one left off by reading this file and the git history.
 
@@ -52,25 +52,23 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 ## Phase Status
 
 ### Phase 0 — Safety: Disable Release Steps
-- [x] Remove/comment out `release.yml` workflow
-- [x] Remove/comment out `release` job in `ci.yml`
-- [x] Verify no accidental publication is possible
-- **Status**: ✅ Done (commit c2f8c04 on branch `modernize/no-release-pipeline`)
+- [ ] Remove/comment out `release.yml` workflow
+- [ ] Remove/comment out `release` job in `ci.yml`
+- [ ] Verify no accidental publication is possible
+- **Status**: Not started
 
 ### Phase 1 — CI Green
-- [x] Check what passes today (Build passed locally on Java 17)
-- [x] Fix CI workflow (`adopt` → `temurin` to silence deprecation)
-- [ ] Push branch, create PR, wait for CI confirmation
-- **Status**: In progress (fix committed; awaiting PR/CI verification)
-- **Note**: `fluent-en` Spek tests currently silently run **0 tests** — a pre-existing issue to address in Phase 4 (Spek → kotest). Not a blocker for CI-green.
+- [ ] Check what passes today
+- [ ] Fix CI workflow (reduce matrix to supported Java versions, modernize actions)
+- [ ] Get green `test` task
+- **Status**: Not started
 
-### Phase 2 — Java 26 (research complete)
-- Confirmed diagnosis: Gradle 7.6.6 too old; needs **Gradle 9.7.1** + **Kotlin 2.4.20**
-- [ ] Upgrade Gradle wrapper to 9.7.1
-- [ ] Upgrade Kotlin to 2.4.20 (stepwise from 1.9.25 → 2.x per no-skip rule)
-- [ ] Update Kotlin/Java toolchain configuration (root uses VERSION_1_8)
-- [ ] Update CI matrix to include Java 26
-- **Status**: Research done; start after Phase 1 PR merges
+### Phase 2 — Java 26
+- [ ] Update Gradle wrapper to Gradle 9.x (required for Java 26)
+- [ ] Kotlin version compatible with Java 26 (needs Kotlin 2.1+ likely)
+- [ ] Root build uses JavaVersion.VERSION_1_8 — needs modernization
+- [ ] Test compatibility matrix update
+- **Status**: Not started (depends on Phase 1)
 
 ### Phase 3 — Library Updates (one at a time, one PR each)
 - Kotlin → latest
