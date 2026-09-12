@@ -45,7 +45,7 @@ subprojects {
 		if (plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
 			tasks.test {
 				useJUnitPlatform()
-				reports.junitXml.isEnabled = true
+				reports.junitXml.required.set(true)
 			}
 
 			java {

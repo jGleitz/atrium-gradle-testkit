@@ -41,7 +41,7 @@ object KotlinPluginSpek: Spek({
 			"""
 			plugins {
 				application
-				kotlin("jvm") version "1.4.10"
+				kotlin("jvm") version "1.9.25"
 			}
 			
 			repositories {
@@ -49,7 +49,7 @@ object KotlinPluginSpek: Spek({
 			}
 			
 			application {
-				mainClassName = "de.joshuagleitze.HelloWorldKt"
+				mainClass.set("de.joshuagleitze.HelloWorldKt")
 			}
 			""".trimIndent()
 		)
