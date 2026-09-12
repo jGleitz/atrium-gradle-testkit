@@ -2,7 +2,7 @@
 
 > **Coordinator**: Sisyphus (AI)
 > **Last Updated**: 2026-09-12
-> **Status**: Phase 0-1 merged. Isolated Gradle 8.14.5 bridge on `modernize/gradle-8` passes all four Java 17 gates. The example fixture uses the existing root Kotlin 1.9.25 version and the required `mainClass` DSL. No publication performed; fluent-en's existing zero-test gap remains.
+> **Status**: Phase 0-1 and the Gradle 8.14.5 bridge are merged. Kotlin-only adaptations for existing PR #161 are locally green on `modernize/kotlin-2-fix`: root and generated fixture use Kotlin 2.4.20, and all five requested Java 17 checks pass, independently rechecked on 2026-09-12. Merge remains gated on remote CI; no publication was performed, and fluent-en's existing zero-test gap remains.
 
 This document persists the modernization work for this project. Any agent can pick up where the previous one left off by reading this file and the git history.
 
@@ -21,12 +21,12 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 - [ ] **Task 4**: Migrate from Spek to kotest
 - [ ] **Task 5**: Prepare an overview of architecture changes needed for latest Atrium (do NOT implement, just prepare information for next agent)
 
-## Current State (validated Gradle 8 bridge)
+## Current State (validated Kotlin 2 migration)
 
 | Component | Current Version | Notes |
 |-----------|----------------|-------|
-| Gradle | 8.14.5 | upgraded from 7.6.6; all four Java 17 gates pass |
-| Kotlin | 1.9.25 | root unchanged; generated example fixture aligned from 1.4.10 to this existing version |
+| Gradle | 8.14.5 | merged bridge, unchanged in the Kotlin-only step |
+| Kotlin | 2.4.20 | root and generated fixture aligned; typed compiler options; all five Java 17 checks pass |
 | Java | 8 target, 17 build | CI builds with 8/11/16 |
 | Spek | 2.0.17 | test framework to be replaced by kotest |
 | Atrium | 0.16.0 | **frozen** until other updates are done |
@@ -73,16 +73,16 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - [x] Execute all four required Java 17 checks and inspect actual test results
 - [x] Resolve the fixture blocker using the authorized alignment to existing Kotlin 1.9.25; replace `mainClassName` only after observing its failure
 - [x] Obtain green `clean test`, `clean build --warning-mode all`, `checkDependenciesBeforePublishing`, and `release --dry-run` before any commit
-- [ ] After the Gradle 8 gate is green and approved, modernize remaining libraries individually, at most one major version per step
+- [x] After the merged Gradle 8 gate, begin individual library modernization with the Kotlin-only PR #161 step; other libraries remain pending
 - [ ] Only then attempt Gradle 8 to 9 separately, followed by separately validated Java 26 configuration and CI changes
-- **Status**: Gradle 8 bridge green on Java 17 and ready for review. Earlier combined Gradle 9/Kotlin/Nexus implementation and version conclusions remain superseded, not a basis for this branch.
+- **Status**: Gradle 8 bridge merged and retained unchanged in the Kotlin-only step. Earlier combined Gradle 9/Kotlin/Nexus implementation and version conclusions remain superseded, not a basis for this branch.
 
 ### Phase 3 — Library Updates (one at a time, one PR each)
-- Kotlin → latest
+- [x] Kotlin 1.9.25 to 2.4.20: local Java 17 validation complete for PR #161; merge only after remote CI succeeds
 - Dokka → latest
 - Spek-testfiles → replace/update
 - Other build plugins (nexus-publish, git-version, etc.), one at a time; preserve publication architecture unless an explicit change is approved
-- **Status**: Not started
+- **Status**: Kotlin-only step locally green; remote CI and approval gate the merge. Other library updates have not started.
 
 ### Phase 4 — Spek → kotest Migration
 - Replace Spek DSL with kotest BehaviorSpec/StringSpec
@@ -119,9 +119,15 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 
 ## Current Branch
 
-`modernize/gradle-8` in `/tmp/opencode/atrium-gradle-8`, based on
-`master` at `c95aaa2823209164572412da8e4d86251e739205` (PR #162).
-The bridge was fully validated before its commits were created.
+`modernize/kotlin-2-fix` in `/tmp/opencode/atrium-kotlin-2`, tracking
+`origin/renovate/major-kotlin-monorepo` for existing same-repository PR #161.
+The earlier execution recorded an initially clean worktree with root KGP 2.4.10
+and applied the requested 2.4.20 bump before adapting the compiler DSL.
+The independent recheck inherited all three modified files, including the
+completed Kotlin 2.4.20 migration, and preserved those code edits unchanged.
+`origin/master` is the comparison base: its Gradle 8.14.5 bridge and PR #164
+Renovate configuration are already present. Local `master` has stale Renovate
+configuration, so its diff is not the Kotlin-only PR scope.
 
 The original `/home/josh/Projekte/atrium-gradle-testkit` worktree remains on
 `modernize/gradle-9` at `2985928`, with its seven dirty files preserved.
@@ -290,6 +296,201 @@ syntax checking, wrapper checksum verification, and file/diff review provide the
 applicable validation. No LSP configuration or tool installation was changed.
 
 ---
+
+## Kotlin 2.4.20 Evidence (2026-09-12)
+
+### Version Selection and Official Sources
+
+- [Kotlin 2.4.20 release notes](https://kotlinlang.org/docs/whatsnew2420.html): released September 7, 2026; the Gradle section lists full compatibility with Gradle 7.6.3 through 9.7.0. Gradle 8.14.5 is inside that range.
+- [K2 migration guide](https://kotlinlang.org/docs/k2-compiler-migration-guide.html): K2 is the default from 2.0.0; upgrading to 2.0.0 or later enables it. Kotlin 2.4.0 onward cannot roll back to the previous compiler. No language-version rollback or compiler fallback was added.
+- [KGP compatibility table](https://kotlinlang.org/docs/gradle-configure-project.html#apply-the-plugin): 2.4.20 supports Gradle 7.6.3-9.7.0. Listed 2.0 releases top out at 8.5/8.8 and listed 2.1 releases at 8.10/8.12.1, below this wrapper's 8.14.5. No unsupported 2.0/2.1 intermediate combinations were tested.
+- [Compiler-options migration guide](https://kotlinlang.org/docs/gradle-compiler-options.html#migrate-from-kotlinoptions-to-compileroptions): replace deprecated `kotlinOptions` with typed `compilerOptions`; use `JvmTarget` instead of a raw target string and Gradle property/list APIs for options.
+
+The direct 1.9.25 to 2.4.20 upgrade crosses one major-version boundary, 1 to 2.
+The 2.0, 2.1, 2.2, 2.3, and 2.4 lines are within major version 2, not separate
+major transitions required by the one-major-at-a-time agreement. The root PR
+already proposed Kotlin 2; the generated TestKit build has its own independent
+plugin literal, which must also be aligned.
+
+### Reproduction and Minimal Adaptation
+
+Before edits, `gradle.properties` still declared `atriumVersion=0.16.0`.
+`git diff origin/master` (with `GIT_MASTER=1`) showed only the inherited root
+plugin bump from 1.9.25 to 2.4.10. Java 17 `help` reproduced configuration errors
+at root lines 57, 58, and 60 for `kotlinOptions`, string `jvmTarget`, and
+list-style `freeCompilerArgs`, first with inherited 2.4.10 and again with 2.4.20.
+The output also lists six existing deprecation warnings under its aggregate
+`9 errors` heading; the three `e:` diagnostics identify the migration blockers.
+
+Only the failing API was adapted: `compilerOptions`,
+`jvmTarget.set(JvmTarget.JVM_1_8)`, and
+`freeCompilerArgs.add("-Xno-optimized-callable-references")`, with the `JvmTarget`
+import. The surrounding task configuration and Java 1.8 settings are unchanged.
+The fixture's active plugin literal changed from 1.9.25 to 2.4.20; its
+`mainClass.set(...)`, test body, and assertions are unchanged. The inactive
+`/* version "1.4.10" */` comment in `example-project/build.gradle.kts` and
+fluent-en's `explicitApi()` remain untouched.
+
+### Exact Java 17 Commands and Results
+
+Every Gradle command below ran in `/tmp/opencode/atrium-kotlin-2` with explicit
+`JAVA_HOME=/home/linuxbrew/.linuxbrew/opt/sdkman-cli/libexec/candidates/java/17.0.20-tem`
+and that installation's `bin` prepended to `PATH`. Logs are in
+`/tmp/opencode/kotlin2-evidence/`; each new command log ends with `EXIT_CODE=N`.
+Pipelines used `set -o pipefail`; no exclusions, ignored failures, suppression,
+dependency substitutions, or compatibility fallbacks were supplied. The five
+gates ran sequentially to prevent clean/build interference.
+
+| Command | Exit Code | Observed Result | Log |
+|---------|-----------|-----------------|-----|
+| `./gradlew help --console=plain`, inherited 2.4.10 | 1 | Configuration failure, 11s, three removed-DSL errors | `red-inherited-2.4.10-help.log` |
+| `./gradlew help --console=plain`, 2.4.20 before DSL migration | 1 | Same configuration failure, 15s | `red-2.4.20-help.log` |
+| `./gradlew :example-project:test --rerun-tasks --console=plain` | 0 | 1m 7s; 9 tasks executed | `example-rerun.log` |
+| `./gradlew clean test --console=plain` | 0 | 53s; 20 tasks executed | `clean-test.log` |
+| `./gradlew clean build --warning-mode all --console=plain` | 0 | 1m 4s; 29 tasks executed, including all three documentation JARs | `clean-build.log` |
+| `./gradlew checkDependenciesBeforePublishing --console=plain` | 0 | 5s; all 3 published-module checks executed | `check-dependencies.log` |
+| `./gradlew release --dry-run --console=plain` | 0 | 1s; every task action skipped | `release-dry-run.log` |
+| `./gradlew --version` | 0 | Gradle 8.14.5; launcher Java 17.0.20; daemon uses the requested Temurin installation | `gradle-version.log` |
+| `./gradlew help -I /tmp/opencode/kotlin2-evidence/verify-targets.gradle --console=plain` | 0 | 1s; runtime target assertions pass for all five subprojects, main and test compilations | `target-alignment.log` |
+
+The supplied `baseline-clean-test.log` remains unchanged; it records the earlier
+master Java 17 baseline (`BUILD SUCCESSFUL in 1m 29s`, 24 actionable tasks).
+Gradle's reported embedded Kotlin 2.0.21 is not the project's KGP version.
+
+### Test Surface, Targets, and Release Graph
+
+After the focused rerun, the example XML had exactly 1 test, 0 failures, 0 errors,
+and 0 skips at `2026-09-12T17:12:01.150Z`. After the final clean build,
+`example-project/build/test-results/test/TEST-KotlinPluginSpek.xml` again reports
+`tests="1" skipped="0" failures="0" errors="0"`, timestamp
+`2026-09-12T17:14:12.732Z`. The existing case, `compiles the Kotlin code and runs
+it`, executes the real TestKit build's `:compileKotlin`, `:classes`, and `:run`,
+prints `Hello World!`, and records `BUILD SUCCESSFUL in 48s` with empty stderr.
+This is end-to-end execution through the existing assertions, not compile-only
+validation.
+
+`apis/fluent-en/build/reports/tests/test/index.html` still reports **0 tests,
+0 failures, 0 ignored**, generated by Gradle 8.14.5 at `12.09.2026, 19:14:12`.
+Its test-results directory contains only `binary/`, no JUnit XML suite. The
+warning-mode build explicitly warns that this discovery gap will fail on
+Gradle 9. Root, api-spec, logic, and translations tests are `NO-SOURCE`.
+The zero-test gap is preserved and reported, not fixed, excluded, or hidden;
+Spek-to-kotest migration remains a separate step.
+
+The external, read-only target-verification init script asserts Java source and
+target compatibility and Kotlin `jvmTarget` are all 1.8 for each subproject's
+main/test compilation, with the callable-reference flag present. It also logs
+`-Xexplicit-api=strict` for fluent-en's main compilation. Java 17 `javap -verbose`
+on all six main class files across logic, fluent-en, and translations reports
+major version **52**, Java 8 bytecode (`bytecode-targets.log`, exit 0).
+
+The dry-run contains all three published paths:
+
+- `:apis:atrium-gradle-testkit-fluent-en`
+- `:atrium-gradle-testkit-logic`
+- `:translations:atrium-gradle-testkit-translation-en`
+
+Each retains dependency checks, source/Dokka JARs, Maven metadata/POM generation,
+`initializeSonatypeStagingRepository`, `signMavenPublication`,
+`publishMavenPublicationToSonatypeRepository`, `publishToSonatype`,
+`publishMavenPublicationToGitHubPackagesRepository`,
+`publishAllPublicationsToGitHubPackagesRepository`, and `release`.
+Root `closeRepository`, `releaseRepository`, and `closeAndReleaseRepository`
+are present. Dry-run verifies graph construction only, not signing credentials
+or live repository compatibility. No signing or publication action executed.
+
+### Scope and Remaining Warnings
+
+Only `build.gradle.kts`, `example-project/src/test/kotlin/KotlinPluginSpek.kt`,
+and this document changed. Comparison with `origin/master` confirms no changes
+to `.github`, `gradle.properties`, settings, api-spec, fluent-en, logic,
+translations, `example-project/build.gradle.kts`, the wrapper files, or Renovate
+configuration. Atrium 0.16.0, Spek 2.0.17, spek-testfiles 1.0.3, Dokka 1.9.20,
+Palantir 3.4.0, Nexus 0.4.0/0.30.0, Gradle 8.14.5, CI, production sources, tests
+and assertions (other than the fixture version literal), and publication
+architecture are unchanged. Kotlin's own runtime/compiler dependencies follow
+the KGP upgrade; no unrelated dependency or tool version was edited.
+
+Observed warnings remain for deprecated convention access, JCenter, automatic
+test-framework loading, fluent-en's zero tests, the daemon's 384 MiB metaspace
+limit, and unavailable Gradle Javadoc `package-list` URLs in Dokka. Existing
+`capitalize`, `dependencyProject`, and `task` script warnings also remain.
+None was suppressed or expanded into an unrelated cleanup.
+
+Both changed Kotlin/KTS files returned no LSP diagnostics. The external Groovy
+verification script has no configured LSP; actual Gradle execution passed.
+`GIT_MASTER=1 git -c core.whitespace=cr-at-eol diff --check origin/master`
+returned exit 0. No Git configuration was persisted. The superseded original
+worktree was not touched or copied. Remote CI was not rerun; no commit, push,
+merge, signing, or publication was performed.
+
+### Independent Handoff Recheck (2026-09-12)
+
+The worktree already contained the typed compiler block, Kotlin 2.4.20 root and
+fixture literals, and the preceding evidence when this recheck began. Rather
+than revert another execution's changes, a disposable standalone build at
+`build/kotlin2-red-repro` reproduced the former `tasks.withType<KotlinCompile>`
+block under KGP 2.4.20. It failed on exactly `kotlinOptions`, string `jvmTarget`,
+and list `freeCompilerArgs`. Applying the same `JvmTarget` import and three
+typed-option replacements made that identical build pass. This is a controlled
+DSL reproduction, not a claim that the already-fixed root still failed.
+The subsequent root `clean` task removed the disposable build, its generated
+state, and its artifact journal. No production code or test assertions were
+edited during the recheck.
+
+All commands below ran sequentially in `/tmp/opencode/atrium-kotlin-2`, with
+the explicit Java 17 `JAVA_HOME` and `PATH` from the preceding evidence section.
+Each command used `set -o pipefail`, captured stdout and stderr with `tee`, and
+appended its actual `EXIT_CODE` before returning that status. New logs use the
+`recheck-` prefix in `/tmp/opencode/kotlin2-evidence/`; earlier logs are preserved.
+
+| Command | Exit Code | Observed Result | Log |
+|---------|-----------|-----------------|-----|
+| `./gradlew -p build/kotlin2-red-repro help --console=plain`, legacy DSL | 1 | 7s; exactly 3 script compilation errors | `recheck-red-2.4.20.log` |
+| Same command, typed DSL | 0 | 1s; 1 task executed | `recheck-green-2.4.20.log` |
+| `./gradlew :example-project:test --rerun-tasks --console=plain` | 0 | 17s; 9 tasks executed | `recheck-example-rerun.log` |
+| `./gradlew clean test --console=plain` | 0 | 52s; 20 tasks executed | `recheck-clean-test.log` |
+| `./gradlew clean build --warning-mode all --console=plain` | 0 | 1m 1s; 29 tasks executed, including all three Dokka JARs | `recheck-clean-build.log` |
+| `./gradlew checkDependenciesBeforePublishing --console=plain` | 0 | 632ms; all 3 published-module checks executed | `recheck-check-dependencies.log` |
+| `./gradlew release --dry-run --console=plain` | 0 | 612ms; all task actions skipped | `recheck-release-dry-run.log` |
+| `./gradlew --version` | 0 | Gradle 8.14.5; launcher/daemon Java 17.0.20 | `recheck-gradle-version.log` |
+
+The focused example rerun produced XML timestamp `2026-09-12T17:50:45.739Z`
+with exactly **1 test, 0 failures, 0 errors, 0 skips**. The final clean build
+produced the same counts at `2026-09-12T17:52:29.412Z`. Its XML records the
+existing test executing `:compileKotlin`, `:classes`, and `:run`, printing
+`Hello World!`, and completing the nested build in 46s with empty stderr.
+The extracted evidence is `recheck-example-xml.log`.
+
+The fluent-en HTML still reports **0 tests, 0 failures, 0 ignored**, generated
+at `12.09.2026, 19:52:29` (`recheck-fluent-en-report.log`). Its test-results
+directory contains only `binary/`. The warning-mode build explicitly reports
+that no tests executed and that this will fail on Gradle 9. This gap was not
+fixed or suppressed. Convention access, JCenter, automatic framework loading,
+and unavailable Dokka Gradle `package-list` warnings also remain visible.
+
+The release log again includes all three published module paths listed above.
+For each it retains dependency checks, source/Dokka JARs, metadata/POM tasks,
+Sonatype staging initialization, `signMavenPublication`, both Sonatype and
+GitHub Packages publication tasks, and `release`. Root `closeRepository`,
+`releaseRepository`, and `closeAndReleaseRepository` remain present. All are
+`SKIPPED` by dry-run; this does not validate live signing or publication.
+Java 17 `javap -verbose` on all six main class files again reports major version
+52 (`recheck-bytecode-targets.log`, exit 0), preserving Java 8 bytecode.
+
+The four official Kotlin sources above were fetched again: Kotlin 2.4.20 is
+compatible with Gradle 7.6.3-9.7.0, K2 is the default, and the typed compiler
+options are the documented migration. Direct 1.x to 2.x is one major transition;
+unsupported intermediate KGP/Gradle combinations were not used in this recheck.
+
+Both changed Kotlin/KTS files again returned no LSP diagnostics; Markdown has
+no configured LSP. The CRLF-aware diff check against `origin/master` returned
+exit 0 (`recheck-diff-check.log`). The protected-path comparison against that
+base also returned exit 0. The only changed files remain `build.gradle.kts`,
+`example-project/src/test/kotlin/KotlinPluginSpek.kt`, and this document.
+The Kotlin/KTS files contain 187 and 59 nonblank/noncomment lines respectively.
+No new helpers, boundary logic, fallbacks, logging, or assertions were added.
+This recheck completed before commit or push. No publication or original-worktree operation was performed.
 
 ## Notes for Agents
 
