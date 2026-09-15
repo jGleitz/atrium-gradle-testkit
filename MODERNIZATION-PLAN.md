@@ -1,8 +1,8 @@
 # atrium-gradle-testkit Modernization Plan
 
 > **Coordinator**: Sisyphus (AI)
-> **Last Updated**: 2026-09-12
-> **Status**: Phase 0-1 and the Gradle 8.14.5 bridge are merged. Kotlin-only adaptations for existing PR #161 are locally green on `modernize/kotlin-2-fix`: root and generated fixture use Kotlin 2.4.20, and all five requested Java 17 checks pass, independently rechecked on 2026-09-12. Merge remains gated on remote CI; no publication was performed, and fluent-en's existing zero-test gap remains.
+> **Last Updated**: 2026-09-15
+> **Status**: The Kotest migration is locally complete on `modernize/kotest` at base `9c505ac`. All Java 17 gates pass, the former fluent-en zero-test gap now executes 83 tests, and an independent review's two low-severity fixture-cleanup findings are fixed. The migration remains uncommitted and still requires a commit, a PR, and remote CI before merge. No publication was performed.
 
 This document persists the modernization work for this project. Any agent can pick up where the previous one left off by reading this file and the git history.
 
@@ -18,19 +18,19 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 - [x] **Task 1**: Get the CI green again (Phase 0-1 merged in PR #162)
 - [ ] **Task 2**: Get it to build with Java 26 (currently works with Java 17, not 26)
 - [ ] **Task 3**: Update all libraries and tools **except Atrium** (Atrium update requires larger changes, deferred)
-- [ ] **Task 4**: Migrate from Spek to kotest
+- [x] **Task 4**: Migrate from Spek to Kotest (locally complete; pending commit, PR, and remote CI)
 - [ ] **Task 5**: Prepare an overview of architecture changes needed for latest Atrium (do NOT implement, just prepare information for next agent)
 
-## Current State (validated Kotlin 2 migration)
+## Current State (validated local Kotest migration)
 
 | Component | Current Version | Notes |
 |-----------|----------------|-------|
-| Gradle | 8.14.5 | merged bridge, unchanged in the Kotlin-only step |
-| Kotlin | 2.4.20 | root and generated fixture aligned; typed compiler options; all five Java 17 checks pass |
+| Gradle | 8.14.5 | current base; unchanged by the Kotest migration |
+| Kotlin | 2.4.20 | root and generated fixture aligned; unchanged by the Kotest migration |
 | Java | 8 target, 17 build | CI builds with 8/11/16 |
-| Spek | 2.0.17 | test framework to be replaced by kotest |
+| Kotest | 5.9.1 | current test framework; all migrated suites use `FunSpec` |
 | Atrium | 0.16.0 | **frozen** until other updates are done |
-| spek-testfiles | 1.0.3 | jGleitz helper lib (may need replacement or update) |
+| Spek / spek-testfiles | removed | executable Spek dependencies removed; scoped exclusions block transitive `org.spekframework.spek2` and `ch.tutteli.spek` artifacts |
 | Dokka | 1.9.20 | docs |
 | palantir git-version | 3.4.0 | versioning |
 | nexus-publish / nexus-staging | 0.4.0 / 0.30.0 | unchanged plugins and publication architecture |
@@ -39,9 +39,9 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 ## Project Structure
 
 ```
-├── api-spec/          # test utilities (spek, atrium-specs)
-├── apis/fluent-en/    # the fluent Atrium API (published)
-├── example-project/   # usage example with Spek
+├── api-spec/          # reusable Kotest FunSpec suites and local SubjectLessSpec registration support
+├── apis/fluent-en/    # published fluent Atrium API with concrete Kotest suites
+├── example-project/   # Kotest TestKit usage example with an isolated temporary project
 ├── logic/             # core assertion logic (published)
 ├── translations/en/   # English translations (published)
 └── build.gradle.kts   # root build (handles publishing, dokka, versioning)
@@ -63,7 +63,7 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - [x] Fix CI workflow (`adopt` → `temurin` to silence deprecation)
 - [x] Phase 0-1 merged through PR #162
 - **Status**: Merged. This session did not rerun remote CI or change any workflow.
-- **Note**: `fluent-en` Spek tests currently silently run **0 tests** — a pre-existing issue to address in Phase 4 (Spek → kotest). Not a blocker for CI-green.
+- **Historical note**: At Phase 1 completion, `fluent-en` Spek tests silently ran **0 tests**. The local Phase 4 migration now executes all 83 fluent tests; commit and remote CI are still pending.
 
 ### Phase 2 - Restarted Sequence: Gradle 8 Before Gradle 9
 - [x] Preserve the mixed `modernize/gradle-9` WIP without editing, cleaning, resetting, or copying its changes
@@ -78,19 +78,21 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - **Status**: Gradle 8 bridge merged and retained unchanged in the Kotlin-only step. Earlier combined Gradle 9/Kotlin/Nexus implementation and version conclusions remain superseded, not a basis for this branch.
 
 ### Phase 3 — Library Updates (one at a time, one PR each)
-- [x] Kotlin 1.9.25 to 2.4.20: local Java 17 validation complete for PR #161; merge only after remote CI succeeds
+- [x] Kotlin 1.9.25 to 2.4.20: present in base `9c505ac`; historical Java 17 validation is preserved below
 - Dokka → latest
-- Spek-testfiles → replace/update
+- [x] spek-testfiles replacement: local `SubjectLessSpec` registration support and native temporary directories, completed with the Kotest migration
 - Other build plugins (nexus-publish, git-version, etc.), one at a time; preserve publication architecture unless an explicit change is approved
-- **Status**: Kotlin-only step locally green; remote CI and approval gate the merge. Other library updates have not started.
+- **Status**: Kotlin 2.4.20 is present in the current base. The spek-testfiles replacement is locally complete as part of Phase 4. Dokka and other build-plugin updates remain pending.
 
-### Phase 4 — Spek → kotest Migration
-- Replace Spek DSL with kotest BehaviorSpec/StringSpec
-- Update `api-spec` module (test utilities)
-- Update `apis/fluent-en` tests
-- Update `example-project` tests
-- Include kotest-specific adaptations (e.g., `@DisplayName`, coroutines support)
-- **Status**: Not started
+### Phase 4: Spek to Kotest Migration
+- [x] Replace all abstract and concrete Spek suites with Kotest `FunSpec`
+- [x] Update `api-spec` reusable suites and port Atrium 0.16.0 `SubjectLessSpec` registration semantics locally
+- [x] Update `apis/fluent-en` tests so the full suite is discovered and executed
+- [x] Update `example-project` to Kotest
+- [x] Replace spek-testfiles temporary-directory support with unique native temporary directories; clean successful specs, retain failed fixtures, and surface cleanup failures
+- [x] Remove direct Spek dependencies and exclude the two Spek groups inherited through Atrium specs
+- [x] Retain every test without suppression
+- **Status**: Locally complete on Java 17. Pending review, commit, PR, and remote CI; not merged.
 
 ### Phase 5 — Atrium Architecture Overview (documentation only)
 - Analyze how latest Atrium (0.x → 1.x) changes affect the project
@@ -119,20 +121,20 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 
 ## Current Branch
 
-`modernize/kotlin-2-fix` in `/tmp/opencode/atrium-kotlin-2`, tracking
-`origin/renovate/major-kotlin-monorepo` for existing same-repository PR #161.
-The earlier execution recorded an initially clean worktree with root KGP 2.4.10
-and applied the requested 2.4.20 bump before adapting the compiler DSL.
-The independent recheck inherited all three modified files, including the
-completed Kotlin 2.4.20 migration, and preserved those code edits unchanged.
-`origin/master` is the comparison base: its Gradle 8.14.5 bridge and PR #164
-Renovate configuration are already present. Local `master` has stale Renovate
-configuration, so its diff is not the Kotlin-only PR scope.
+`modernize/kotest` in `/tmp/opencode/atrium-kotest`, based on `9c505ac` and
+tracking `origin/master`. All source and build changes for the Kotest migration
+remain uncommitted. This document records the resulting local state without
+claiming a commit, PR, remote CI run, or merge.
 
-The original `/home/josh/Projekte/atrium-gradle-testkit` worktree remains on
-`modernize/gradle-9` at `2985928`, with its seven dirty files preserved.
-That mixed attempt is superseded by this isolated sequence. Do not clean it,
-resume it, or copy its Kotlin/Nexus/dependency notation changes into this branch.
+The original `/home/josh/Projekte/atrium-gradle-testkit` worktree is currently
+on `renovate-config` at `b5b8214` and was not touched during this migration.
+The previously preserved `modernize/gradle-9` branch remains at `fe99052`, but
+its former `/tmp/opencode/atrium-gradle-9-clean` worktree no longer exists. Do
+not resume or copy changes from that superseded attempt into this branch.
+
+Next move: review and commit the Kotest migration, open its PR, pass remote CI,
+and merge it first. Then recreate or rebase the Gradle 9 work from the
+Kotest-enabled `master` rather than resuming the preserved mixed worktree.
 
 ## Gradle 8 Bridge Evidence (2026-09-12)
 
@@ -374,8 +376,8 @@ validation.
 Its test-results directory contains only `binary/`, no JUnit XML suite. The
 warning-mode build explicitly warns that this discovery gap will fail on
 Gradle 9. Root, api-spec, logic, and translations tests are `NO-SOURCE`.
-The zero-test gap is preserved and reported, not fixed, excluded, or hidden;
-Spek-to-kotest migration remains a separate step.
+At the time, the zero-test gap was preserved and reported rather than fixed,
+excluded, or hidden. The local Kotest migration documented below now resolves it.
 
 The external, read-only target-verification init script asserts Java source and
 target compatibility and Kotlin `jvmTarget` are all 1.8 for each subproject's
@@ -462,12 +464,13 @@ existing test executing `:compileKotlin`, `:classes`, and `:run`, printing
 `Hello World!`, and completing the nested build in 46s with empty stderr.
 The extracted evidence is `recheck-example-xml.log`.
 
-The fluent-en HTML still reports **0 tests, 0 failures, 0 ignored**, generated
+At the time, the fluent-en HTML still reported **0 tests, 0 failures, 0 ignored**, generated
 at `12.09.2026, 19:52:29` (`recheck-fluent-en-report.log`). Its test-results
 directory contains only `binary/`. The warning-mode build explicitly reports
-that no tests executed and that this will fail on Gradle 9. This gap was not
-fixed or suppressed. Convention access, JCenter, automatic framework loading,
-and unavailable Dokka Gradle `package-list` warnings also remain visible.
+that no tests executed and that this would fail on Gradle 9. That recheck did
+not fix or suppress the gap. The local Kotest migration documented below now
+resolves it. Convention access, JCenter, automatic framework loading, and
+unavailable Dokka Gradle `package-list` warnings remained visible.
 
 The release log again includes all three published module paths listed above.
 For each it retains dependency checks, source/Dokka JARs, metadata/POM tasks,
@@ -491,6 +494,54 @@ base also returned exit 0. The only changed files remain `build.gradle.kts`,
 The Kotlin/KTS files contain 187 and 59 nonblank/noncomment lines respectively.
 No new helpers, boundary logic, fallbacks, logging, or assertions were added.
 This recheck completed before commit or push. No publication or original-worktree operation was performed.
+
+## Kotest Migration Evidence (2026-09-15)
+
+The Java 17 baseline compiled the fluent test sources but executed zero fluent
+tests, while the example executed one Spek test. The migration converted every
+abstract and concrete suite to Kotest `FunSpec`, ported Atrium 0.16.0
+`SubjectLessSpec` registration semantics into the project, and replaced
+spek-testfiles with `Files.createTempDirectory` plus result-aware lifecycle
+hooks. Each spec gets a unique directory; successful specs require cleanup to
+succeed, while setup or test failures retain their fixture for diagnosis. No
+test was removed, disabled, ignored, or otherwise suppressed, and Atrium
+remains pinned at 0.16.0.
+
+Scoped exclusions on `atrium-specs` remove transitive
+`org.spekframework.spek2` and `ch.tutteli.spek` dependencies. `dependencyInsight`
+for Spek reports no matching dependency on the migrated executable classpaths.
+Kotest `dependencyInsight` selects JVM version 8 variants. Local Java 8 runtime
+execution wasn't possible because this host has only JDK 17, 25, and 26
+installed. The existing CI Java 8, 11, and 16 matrix remains the remote runtime
+gate.
+
+All commands below ran sequentially with Java 17 in
+`/tmp/opencode/atrium-kotest` and completed successfully.
+
+| Command | Result |
+|---------|--------|
+| `./gradlew :apis:atrium-gradle-testkit-fluent-en:test :example-project:test --rerun-tasks --console=plain` | Passed in 15s. XML totals are 14 `BuildResult` plus 69 `BuildTask`, 83 fluent tests total, and 1 example test. Every suite reports zero failures, errors, and skips. |
+| `./gradlew clean test --console=plain` | Passed in 55s. |
+| `./gradlew clean build --warning-mode all --console=plain` | Passed in 1m 8s; all build tasks completed. |
+| `./gradlew checkDependenciesBeforePublishing --console=plain` | Passed in 593ms for the dependency guard. |
+| `./gradlew release --dry-run --console=plain` | Passed in 631ms. Every action was skipped and no publication occurred. |
+
+Java 17 `javap -verbose` inspection of all six published main class files reports
+class major version 52, preserving Java 8 bytecode. LSP diagnostics are clean
+for every changed Kotlin and Kotlin DSL file. `GIT_MASTER=1 git diff --check`
+passes.
+Existing unrelated warnings remain for deprecated Gradle convention access,
+JCenter, unavailable Dokka `package-list` resources, and daemon metaspace.
+An independent read-only review found two low-severity cleanup regressions in
+the first migration pass: unconditional deletion discarded failed fixtures and
+unchecked `deleteRecursively()` could hide cleanup failure. Both are fixed by
+tracking setup/test success and checking the deletion result; focused suites
+still report 83 plus 1 passing tests after the correction.
+
+No commit, push, PR, publication, signing operation, CI run, or merge has
+occurred for this migration. Review, commit, open the PR, pass CI, and merge the
+Kotest work first. Then recreate or rebase the Gradle 9 work from the
+Kotest-enabled `master`.
 
 ## Notes for Agents
 
