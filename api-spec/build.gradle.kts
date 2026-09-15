@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
 	val spekVersion: String by project
+	val kotestVersion: String by project
 	val atriumVersion: String by project
 
 	api(name = "atrium-specs", version = atriumVersion, group = "ch.tutteli.atrium")
@@ -12,4 +13,5 @@ dependencies {
 	implementation(name = "atrium-fluent-en_GB", version = atriumVersion, group = "ch.tutteli.atrium")
 	implementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
 	implementation(name = "spek-testfiles", version = "1.0.3", group = "de.joshuagleitze")
+	implementation(name = "kotest-runner-junit5", version = kotestVersion, group = "io.kotest")
 }

@@ -4,6 +4,7 @@ plugins {
 
 dependencies {
 	val spekVersion: String by project
+	val kotestVersion: String by project
 	val atriumVersion: String by project
 
 	api(project(":${rootProject.name}-logic"))
@@ -16,6 +17,7 @@ dependencies {
 	testImplementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
 	testRuntimeOnly(name = "spek-runtime-jvm", version = spekVersion, group = "org.spekframework.spek2")
 	testRuntimeOnly(name = "spek-runner-junit5", version = spekVersion, group = "org.spekframework.spek2")
+	testImplementation(name = "kotest-runner-junit5", version = kotestVersion, group = "io.kotest")
 }
 
 kotlin {

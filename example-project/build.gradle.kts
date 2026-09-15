@@ -8,6 +8,7 @@ repositories {
 
 dependencies {
 	val spekVersion = "2.0.17"
+	val kotestVersion: String by project
 	val atriumVersion = "0.16.0"
 
 	testImplementation(gradleTestKit())
@@ -19,4 +20,5 @@ dependencies {
 	testImplementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
 	testRuntimeOnly(name = "spek-runtime-jvm", version = spekVersion, group = "org.spekframework.spek2")
 	testRuntimeOnly(name = "spek-runner-junit5", version = spekVersion, group = "org.spekframework.spek2")
+	testImplementation(name = "kotest-runner-junit5", version = kotestVersion, group = "io.kotest")
 }
