@@ -5,7 +5,7 @@ import ch.tutteli.atrium.specs.feature0
 import ch.tutteli.atrium.specs.fun1
 import org.gradle.testkit.runner.BuildTask
 
-object BuildTaskAssertionsEnSpec: BuildTaskAssertionsSpec(
+public class BuildTaskAssertionsEnSpec: BuildTaskAssertionsSpec(
 	feature0(Expect<BuildTask?>::wasInvoked),
 	fun1(Expect<BuildTask?>::wasInvoked),
 	feature0(Expect<BuildTask?>::wasNotInvoked),
