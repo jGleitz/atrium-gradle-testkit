@@ -7,7 +7,6 @@ repositories {
 }
 
 dependencies {
-	val spekVersion = "2.0.17"
 	val kotestVersion: String by project
 	val atriumVersion = "0.16.0"
 
@@ -15,10 +14,6 @@ dependencies {
 	// for your project, use this instead:
 	// testImplementation(name = "atrium-gradle-testkit-fluent-en", version = "<latest-release>", group = "de.joshuagleitze")
 	testImplementation(project(":apis:atrium-gradle-testkit-fluent-en"))
-	testImplementation(name = "spek-testfiles", version = "1.0.3", group = "de.joshuagleitze")
 	testImplementation(name = "atrium-fluent-en_GB", version = atriumVersion, group = "ch.tutteli.atrium")
-	testImplementation(name = "spek-dsl-jvm", version = spekVersion, group = "org.spekframework.spek2")
-	testRuntimeOnly(name = "spek-runtime-jvm", version = spekVersion, group = "org.spekframework.spek2")
-	testRuntimeOnly(name = "spek-runner-junit5", version = spekVersion, group = "org.spekframework.spek2")
 	testImplementation(name = "kotest-runner-junit5", version = kotestVersion, group = "io.kotest")
 }
