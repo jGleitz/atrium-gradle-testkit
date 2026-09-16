@@ -1,13 +1,13 @@
 import de.marcphilipp.gradle.nexus.NexusRepository
 import org.gradle.api.JavaVersion.VERSION_1_8
-import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
 	kotlin("jvm") version "2.4.20"
 	id("com.palantir.git-version") version "3.4.0"
-	id("org.jetbrains.dokka") version "1.9.20"
+	id("org.jetbrains.dokka") version "2.2.0"
+	id("org.jetbrains.dokka-javadoc") version "2.2.0"
 	id("de.marcphilipp.nexus-publish") version "0.4.0"
 	id("io.codearte.nexus-staging") version "0.30.0"
 	`maven-publish`
@@ -66,6 +66,7 @@ subprojects {
 		if (willBePublished) {
 			apply {
 				plugin("org.jetbrains.dokka")
+				plugin("org.jetbrains.dokka-javadoc")
 				plugin("de.marcphilipp.nexus-publish")
 				plugin("org.gradle.maven-publish")
 				plugin("org.gradle.signing")
@@ -78,17 +79,21 @@ subprojects {
 				from(sourceSets.main.get().allSource)
 			}
 
-			tasks.withType<DokkaTask> {
+			dokka {
 				dokkaSourceSets.named("main") {
 					sourceLink {
 						val projectPath = projectDir.absoluteFile.relativeTo(rootProject.projectDir.absoluteFile)
 						localDirectory.set(file("src/main/kotlin"))
-						remoteUrl.set(uri("https://github.com/$githubRepository/blob/$gitRef/$projectPath/src/main/kotlin").toURL())
+						remoteUrl("https://github.com/$githubRepository/blob/$gitRef/$projectPath/src/main/kotlin")
 						remoteLineSuffix.set("#L")
 					}
-					externalDocumentationLink("https://docs.gradle.org/current/javadoc/")
+					externalDocumentationLinks.register("gradle") {
+						url("https://docs.gradle.org/current/javadoc/")
+					}
 					val atriumVersion: String by project
-					externalDocumentationLink("https://docs.atriumlib.org/$atriumVersion/doc/")
+					externalDocumentationLinks.register("atrium") {
+						url("https://docs.atriumlib.org/$atriumVersion/doc/")
+					}
 				}
 			}
 
@@ -96,7 +101,7 @@ subprojects {
 				group = "build"
 				description = "Assembles the Kotlin docs with Dokka"
 				archiveClassifier.set("javadoc")
-				from(tasks.dokkaJavadoc)
+				from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
 			}
 
 			artifacts {
