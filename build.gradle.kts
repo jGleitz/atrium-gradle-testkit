@@ -1,4 +1,3 @@
-import de.marcphilipp.gradle.nexus.NexusRepository
 import org.gradle.api.JavaVersion.VERSION_1_8
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
@@ -8,8 +7,7 @@ plugins {
 	id("com.palantir.git-version") version "3.4.0"
 	id("org.jetbrains.dokka") version "2.2.0"
 	id("org.jetbrains.dokka-javadoc") version "2.2.0"
-	id("de.marcphilipp.nexus-publish") version "0.4.0"
-	id("io.codearte.nexus-staging") version "0.30.0"
+	id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
 	`maven-publish`
 	signing
 }
@@ -31,10 +29,18 @@ val githubRepository: String? by project
 val githubOwner = githubRepository?.split("/")?.get(0)
 val githubToken: String? by project
 
-nexusStaging {
-	username = ossrhUsername
-	password = ossrhPassword
-	numberOfRetries = 42
+nexusPublishing {
+	repositories {
+		sonatype {
+			nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+			snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+			username.set(ossrhUsername)
+			password.set(ossrhPassword)
+		}
+	}
+	transitionCheckOptions {
+		maxRetries.set(42)
+	}
 }
 
 subprojects {
@@ -67,7 +73,6 @@ subprojects {
 			apply {
 				plugin("org.jetbrains.dokka")
 				plugin("org.jetbrains.dokka-javadoc")
-				plugin("de.marcphilipp.nexus-publish")
 				plugin("org.gradle.maven-publish")
 				plugin("org.gradle.signing")
 			}
@@ -111,7 +116,6 @@ subprojects {
 
 			lateinit var publication: MavenPublication
 			lateinit var githubPackages: ArtifactRepository
-			lateinit var mavenCentral: NexusRepository
 
 			publishing {
 				publications {
@@ -165,17 +169,8 @@ subprojects {
 				}
 			}
 
-			nexusPublishing {
-				repositories {
-					mavenCentral = sonatype {
-						username.set(ossrhUsername)
-						password.set(ossrhPassword)
-					}
-				}
-			}
-
-			val publishToGithub = tasks.named("publishAllPublicationsTo${githubPackages.name.capitalize()}Repository")
-			val publishToMavenCentral = tasks.named("publishTo${mavenCentral.name.capitalize()}")
+			val publishToGithub = tasks.named("publishAllPublicationsTo${githubPackages.name.replaceFirstChar { it.uppercase() }}Repository")
+			val publishToSonatype = tasks.named("publishToSonatype")
 
 			signing {
 				val signingKey: String? by project
@@ -189,8 +184,10 @@ subprojects {
 				description = "Checks that all dependencies are also being published"
 
 				doFirst {
+					val root = project.rootProject
 					project.configurations.runtimeClasspath {
 						allDependencies.withType<ProjectDependency> {
+							val dependencyProject = root.project(path)
 							check(dependencyProject.willBePublished) {
 								"This project has a dependency on $dependencyProject, but the latter will not be published!"
 							}
@@ -199,16 +196,33 @@ subprojects {
 				}
 			}
 
-			rootProject.tasks.closeAndReleaseRepository { mustRunAfter(publishToMavenCentral) }
-
-			publishToMavenCentral { dependsOn(checkDependenciesBeforePublishing) }
-			publishToGithub { dependsOn(checkDependenciesBeforePublishing) }
-
-			task("release") {
+			tasks.register("release") {
 				group = "release"
 				description = "Releases the project to all remote repositories"
-				dependsOn(publishToGithub, publishToMavenCentral, rootProject.tasks.closeAndReleaseRepository)
+				dependsOn(publishToGithub, publishToSonatype, ":closeAndReleaseSonatypeStagingRepository")
 			}
+		}
+	}
+}
+
+gradle.projectsEvaluated {
+	val publishedProjects = subprojects.filter { it.willBePublished }
+	val publishToSonatype = listOf(tasks.named("publishToSonatype")) +
+		publishedProjects.map { it.tasks.named("publishToSonatype") }
+	val closeAndReleaseSonatypeStagingRepository = tasks.named("closeAndReleaseSonatypeStagingRepository")
+	val dependencyChecks = publishedProjects
+		.map { it.tasks.named("checkDependenciesBeforePublishing") }
+
+	tasks.named("initializeSonatypeStagingRepository").configure { dependsOn(dependencyChecks) }
+	publishToSonatype.forEach { it.configure { dependsOn(dependencyChecks) } }
+	closeAndReleaseSonatypeStagingRepository.configure { mustRunAfter(publishToSonatype) }
+	publishedProjects.forEach {
+		listOf(
+			it.tasks.named("publishMavenPublicationToSonatypeRepository"),
+			it.tasks.named("publishMavenPublicationToGitHubPackagesRepository"),
+			it.tasks.named("publishAllPublicationsToGitHubPackagesRepository")
+		).forEach { publicationTask ->
+			publicationTask.configure { dependsOn(dependencyChecks) }
 		}
 	}
 }
