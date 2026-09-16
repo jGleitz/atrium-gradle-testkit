@@ -7,16 +7,36 @@
 ## Example
 
 Here is how you can use this library to test Gradle plugins.
-The example uses [Spek](https://www.spekframework.org/) with [spek-testfiles](https://github.com/jGleitz/spek-testfiles).
+The example uses [Kotest](https://kotest.io/) with a native temporary directory.
 You can see the whole example in the [`example-project` folder](./example-project). 
 
 ```kotlin
-object KotlinPluginSpek: Spek({
-	val testFiles = testFiles()
-	val projectDir by memoized(SCOPE) { testFiles.createDirectory("testProject") }
+class KotlinPluginSpec: FunSpec({
+	val projectDir = Files.createTempDirectory("atrium-gradle-testkit-example-")
+	var setupCompleted = false
+	var testsSuccessful = true
 
-	describe("run") {
-		it("compiles the Kotlin code and runs it") {
+	beforeSpec {
+		/* set up the Gradle project in projectDir */
+		setupCompleted = true
+	}
+
+	afterTest { (_, result) ->
+		if (result.isErrorOrFailure) {
+			testsSuccessful = false
+		}
+	}
+
+	afterSpec {
+		if (setupCompleted && testsSuccessful) {
+			check(projectDir.toFile().deleteRecursively()) {
+				"Failed to delete temporary project directory: $projectDir"
+			}
+		}
+	}
+
+	context("run") {
+		test("compiles the Kotlin code and runs it") {
 			val runResult = GradleRunner.create()
 				.forwardOutput()
 				.withProjectDir(projectDir.toFile())
@@ -29,10 +49,6 @@ object KotlinPluginSpek: Spek({
 				output.contains("Hello World!")
 			}
 		}
-	}
-
-	beforeGroup {
-		/* set up the gradle project */
 	}
 })
 ```

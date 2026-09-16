@@ -8,7 +8,6 @@ import ch.tutteli.atrium.api.verbs.expect
 import ch.tutteli.atrium.creating.Expect
 import ch.tutteli.atrium.specs.Feature0
 import ch.tutteli.atrium.specs.Fun1
-import ch.tutteli.atrium.specs.SubjectLessSpec
 import ch.tutteli.atrium.specs.forSubjectLess
 import ch.tutteli.atrium.specs.lambda
 import ch.tutteli.atrium.specs.name
@@ -17,7 +16,7 @@ import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.INVOKED
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS_NOT
-import de.joshuagleitze.test.spek.testfiles.testFiles
+import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.BuildTask
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.TaskOutcome.FAILED
@@ -26,9 +25,7 @@ import org.gradle.testkit.runner.TaskOutcome.NO_SOURCE
 import org.gradle.testkit.runner.TaskOutcome.SKIPPED
 import org.gradle.testkit.runner.TaskOutcome.SUCCESS
 import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.lifecycle.CachingMode.SCOPE
-import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 
 abstract class BuildTaskAssertionsSpec(
 	wasInvokedFeature: Feature0<BuildTask?, BuildTask>,
@@ -40,11 +37,12 @@ abstract class BuildTaskAssertionsSpec(
 	wasSkipped: Feature0<BuildTask?, BuildTask>,
 	usedCachedResult: Feature0<BuildTask?, BuildTask>,
 	hadNoSource: Feature0<BuildTask?, BuildTask>
-): Spek({
-	val testFiles = testFiles()
-	val projectFolder by memoized(SCOPE) { testFiles.createDirectory("testProject") }
+): FunSpec({
+	val projectFolder = Files.createTempDirectory("atrium-gradle-testkit-build-task-")
+	var setupCompleted = false
+	var testsSuccessful = true
 
-	beforeGroup {
+	beforeSpec {
 		projectFolder.resolve("settings.gradle.kts").toFile().writeText(
 			"""
 			rootProject.name = "testProject"
@@ -77,7 +75,7 @@ abstract class BuildTaskAssertionsSpec(
 			val noSourceTask by tasks.registering {
 				inputs.files(fileTree(projectDir) {
 					exclude("**/*")
-				}).skipWhenEmpty()
+				}).skipWhenEmpty().ignoreEmptyDirectories()
 				doLast { /* some action */ }
 			}
 			
@@ -89,18 +87,33 @@ abstract class BuildTaskAssertionsSpec(
 			val allTasks by tasks.registering {
 				dependsOn(successTask, upToDateTask, skippedTask, cachedTask, noSourceTask, failureTask)
 			}
-			""".trimIndent()
+		""".trimIndent()
 		)
+		setupCompleted = true
 	}
 
-	val gradleRun by memoized(SCOPE) {
+	afterTest { (_, result) ->
+		if (result.isErrorOrFailure) {
+			testsSuccessful = false
+		}
+	}
+
+	afterSpec {
+		if (setupCompleted && testsSuccessful) {
+			check(projectFolder.toFile().deleteRecursively()) {
+				"Failed to delete temporary project directory: $projectFolder"
+			}
+		}
+	}
+
+	val gradleRun by lazy {
 		// create the cache
 		runGradle(projectFolder, "cachedTask", "--build-cache")
 		// clean so the cache will be used
-		return@memoized runGradle(projectFolder, "clean", "allTasks", "--build-cache", fail = true)
+		runGradle(projectFolder, "clean", "allTasks", "--build-cache", fail = true)
 	}
 
-	include(object: SubjectLessSpec<BuildTask?>(
+	registerSubjectLessSpec<BuildTask?>(
 		"",
 		wasInvokedFeature.forSubjectLess(),
 		wasInvokedFun.forSubjectLess { isA<BuildTask>() },
@@ -111,23 +124,23 @@ abstract class BuildTaskAssertionsSpec(
 		wasSkipped.forSubjectLess(),
 		usedCachedResult.forSubjectLess(),
 		hadNoSource.forSubjectLess()
-	) {})
+	)
 
 	unifySignatures(wasInvokedFeature, wasInvokedFun).forEach { (name, wasInvokedLambda, _) ->
-		describe(name) {
-			it("succeeds if the task was invoked directly") {
+		context(name) {
+			test("succeeds if the task was invoked directly") {
 				expect {
 					expect(gradleRun.task(":clean")).wasInvokedLambda { isA<BuildTask>() }
 				}.notToThrow()
 			}
 
-			it("succeeds if the task was invoked transitively") {
+			test("succeeds if the task was invoked transitively") {
 				expect {
 					expect(gradleRun.task(":successTask")).wasInvokedLambda { isA<BuildTask>() }
 				}.notToThrow()
 			}
 
-			it("fails if the task was not invoked") {
+			test("fails if the task was not invoked") {
 				expect {
 					expect(gradleRun.task(":iDontExist")).wasInvokedLambda { isA<BuildTask>() }
 				}.toThrow<AssertionError>().messageContains(WAS.getDefault(), INVOKED.getDefault())
@@ -135,22 +148,22 @@ abstract class BuildTaskAssertionsSpec(
 		}
 	}
 
-	describe(wasNotInvoked.name) {
+	context(wasNotInvoked.name) {
 		val wasNotInvokedLambda = wasNotInvoked.lambda
 
-		it("fails if the task was invoked directly") {
+		test("fails if the task was invoked directly") {
 			expect {
 				expect(gradleRun.task(":clean")).wasNotInvokedLambda()
 			}.toThrow<AssertionError>().messageContains(WAS_NOT.getDefault(), INVOKED.getDefault())
 		}
 
-		it("fails if the task was invoked transitively") {
+		test("fails if the task was invoked transitively") {
 			expect {
 				expect(gradleRun.task(":successTask")).wasNotInvokedLambda()
 			}.toThrow<AssertionError>().messageContains(WAS_NOT.getDefault(), INVOKED.getDefault())
 		}
 
-		it("succeeds if the task was not invoked") {
+		test("succeeds if the task was not invoked") {
 			expect {
 				expect(gradleRun.task(":iDontExist")).wasNotInvokedLambda()
 			}.notToThrow()
@@ -170,22 +183,22 @@ abstract class BuildTaskAssertionsSpec(
 	outcomeChecks.forEach { (feature, outcome, task) ->
 		val featureFun = feature.lambda
 
-		describe(feature.name) {
-			it("succeeds if the outcome is $outcome") {
+		context(feature.name) {
+			test("succeeds if the outcome is $outcome") {
 				expect {
 					expect(gradleRun.task(task)).featureFun()
 				}.notToThrow()
 			}
 
 			outcomeChecks.filter { it.outcome != outcome }.forEach { (_, otherOutcome, otherTask) ->
-				it("fails if the outcome is $otherOutcome") {
+				test("fails if the outcome is $otherOutcome") {
 					expect {
 						expect(gradleRun.task(otherTask)).featureFun()
 					}.toThrow<AssertionError>().messageContains(outcome.name, otherOutcome.name)
 				}
 			}
 
-			it("fails if the task was not invoked") {
+			test("fails if the task was not invoked") {
 				expect {
 					expect(gradleRun.task("iDontExist")).featureFun()
 				}.toThrow<AssertionError>().messageContains(outcome.name, WAS.getDefault(), INVOKED.getDefault())

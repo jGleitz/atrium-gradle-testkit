@@ -4,34 +4,17 @@ import de.joshuagleitze.test.gradle.output
 import de.joshuagleitze.test.gradle.task
 import de.joshuagleitze.test.gradle.wasInvoked
 import de.joshuagleitze.test.gradle.wasSuccessful
-import de.joshuagleitze.test.spek.testfiles.testFiles
+import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.GradleRunner
-import org.spekframework.spek2.Spek
-import org.spekframework.spek2.lifecycle.CachingMode.SCOPE
-import org.spekframework.spek2.style.specification.describe
+import java.nio.file.Files
 import java.nio.file.Files.createDirectories
 
-object KotlinPluginSpek: Spek({
-	val testFiles = testFiles()
-	val projectDir by memoized(SCOPE) { testFiles.createDirectory("testProject") }
+class KotlinPluginSpec: FunSpec({
+	val projectDir = Files.createTempDirectory("atrium-gradle-testkit-example-")
+	var setupCompleted = false
+	var testsSuccessful = true
 
-	describe("run") {
-		it("compiles the Kotlin code and runs it") {
-			val runResult = GradleRunner.create()
-				.forwardOutput()
-				.withProjectDir(projectDir.toFile())
-				.withArguments("run")
-				.build()
-
-			expect(runResult) {
-				task(":compileKotlin").wasSuccessful()
-				task(":classes").wasInvoked()
-				output.contains("Hello World!")
-			}
-		}
-	}
-
-	beforeGroup {
+	beforeSpec {
 		projectDir.resolve("settings.gradle.kts").toFile().writeText(
 			"""
 			rootProject.name = "testProject"
@@ -62,5 +45,36 @@ object KotlinPluginSpek: Spek({
 			}
 			""".trimIndent()
 		)
+		setupCompleted = true
+	}
+
+	afterTest { (_, result) ->
+		if (result.isErrorOrFailure) {
+			testsSuccessful = false
+		}
+	}
+
+	afterSpec {
+		if (setupCompleted && testsSuccessful) {
+			check(projectDir.toFile().deleteRecursively()) {
+				"Failed to delete temporary project directory: $projectDir"
+			}
+		}
+	}
+
+	context("run") {
+		test("compiles the Kotlin code and runs it") {
+			val runResult = GradleRunner.create()
+				.forwardOutput()
+				.withProjectDir(projectDir.toFile())
+				.withArguments("run")
+				.build()
+
+			expect(runResult) {
+				task(":compileKotlin").wasSuccessful()
+				task(":classes").wasInvoked()
+				output.contains("Hello World!")
+			}
+		}
 	}
 })
