@@ -1,8 +1,8 @@
 # atrium-gradle-testkit Modernization Plan
 
 > **Coordinator**: Sisyphus (AI)
-> **Last Updated**: 2026-09-15
-> **Status**: The Kotest migration is locally complete on `modernize/kotest` at base `9c505ac`. All Java 17 gates pass, the former fluent-en zero-test gap now executes 83 tests, and an independent review's two low-severity fixture-cleanup findings are fixed. The migration remains uncommitted and still requires a commit, a PR, and remote CI before merge. No publication was performed.
+> **Last Updated**: 2026-09-16
+> **Status**: The Gradle 9.7.1 and Java 26 modernization is locally complete on `modernize/gradle-9.7.1-java-26`, based on merged prerequisite commit `bf26fd7`. The branch contains the locally validated modernization commits; clean tests and builds pass locally on Java 17, 25, and 26. It still requires push, a PR, and remote 17/25/26 CI. No publication, credential, signing, or Central Portal validation was performed.
 
 This document persists the modernization work for this project. Any agent can pick up where the previous one left off by reading this file and the git history.
 
@@ -16,25 +16,25 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 
 - [x] **Task 0**: Disable the GitHub build steps that would release the library
 - [x] **Task 1**: Get the CI green again (Phase 0-1 merged in PR #162)
-- [ ] **Task 2**: Get it to build with Java 26 (currently works with Java 17, not 26)
+- [ ] **Task 2**: Get it to build with Java 26 (locally complete on Java 17/25/26; pending PR and remote CI)
 - [ ] **Task 3**: Update all libraries and tools **except Atrium** (Atrium update requires larger changes, deferred)
-- [x] **Task 4**: Migrate from Spek to Kotest (locally complete; pending commit, PR, and remote CI)
+- [x] **Task 4**: Migrate from Spek to Kotest (PR #166 merged as `4bee3c1` after Java 8/11/16 CI)
 - [ ] **Task 5**: Prepare an overview of architecture changes needed for latest Atrium (do NOT implement, just prepare information for next agent)
 
-## Current State (validated local Kotest migration)
+## Current State (validated local Gradle 9 and Java 26 modernization)
 
 | Component | Current Version | Notes |
 |-----------|----------------|-------|
-| Gradle | 8.14.5 | current base; unchanged by the Kotest migration |
-| Kotlin | 2.4.20 | root and generated fixture aligned; unchanged by the Kotest migration |
-| Java | 8 target, 17 build | CI builds with 8/11/16 |
+| Gradle | 9.7.1 | locally validated wrapper on the final branch |
+| Kotlin | 2.4.20 | root and generated fixture aligned |
+| Java | 8 target, 17+ build JVM | **Build JVM floor is now 17+ because Gradle 9 cannot launch on Java 8, 11, or 16. Published classes remain Java 8 bytecode, major version 52.** |
 | Kotest | 5.9.1 | current test framework; all migrated suites use `FunSpec` |
 | Atrium | 0.16.0 | **frozen** until other updates are done |
 | Spek / spek-testfiles | removed | executable Spek dependencies removed; scoped exclusions block transitive `org.spekframework.spek2` and `ch.tutteli.spek` artifacts |
-| Dokka | 1.9.20 | docs |
+| Dokka | 2.2.0 | DGP v2 prerequisite merged in PR #167 as `bf26fd7` |
 | palantir git-version | 3.4.0 | versioning |
-| nexus-publish / nexus-staging | 0.4.0 / 0.30.0 | unchanged plugins and publication architecture |
-| CI | GitHub Actions | release steps disabled on master; action versions unchanged |
+| nexus-publish | 2.0.0 | local Gradle 9 update; publication architecture retained |
+| CI | GitHub Actions | branch matrix changed from 8/11/16 to 17/25/26; not remotely validated |
 
 ## Project Structure
 
@@ -48,7 +48,7 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 ```
 
 Published modules: `apis:fluent-en`, `logic`, `translations:en` (via `willBePublished` extra flag).
-Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-publish`/`nexus-staging`, signed via Gradle signing plugin.
+Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-publish`, signed via the Gradle signing plugin.
 
 ## Phase Status
 
@@ -62,8 +62,8 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - [x] Check what passes today (Build passed locally on Java 17)
 - [x] Fix CI workflow (`adopt` → `temurin` to silence deprecation)
 - [x] Phase 0-1 merged through PR #162
-- **Status**: Merged. This session did not rerun remote CI or change any workflow.
-- **Historical note**: At Phase 1 completion, `fluent-en` Spek tests silently ran **0 tests**. The local Phase 4 migration now executes all 83 fluent tests; commit and remote CI are still pending.
+- **Status**: Merged. The final local branch now edits the workflow for Gradle 9's Java 17+ launch requirement, but that edit has not run in remote CI.
+- **Historical note**: At Phase 1 completion, `fluent-en` Spek tests silently ran **0 tests**. The merged Phase 4 migration now executes all 83 fluent tests.
 
 ### Phase 2 - Restarted Sequence: Gradle 8 Before Gradle 9
 - [x] Preserve the mixed `modernize/gradle-9` WIP without editing, cleaning, resetting, or copying its changes
@@ -74,15 +74,18 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - [x] Resolve the fixture blocker using the authorized alignment to existing Kotlin 1.9.25; replace `mainClassName` only after observing its failure
 - [x] Obtain green `clean test`, `clean build --warning-mode all`, `checkDependenciesBeforePublishing`, and `release --dry-run` before any commit
 - [x] After the merged Gradle 8 gate, begin individual library modernization with the Kotlin-only PR #161 step; other libraries remain pending
-- [ ] Only then attempt Gradle 8 to 9 separately, followed by separately validated Java 26 configuration and CI changes
-- **Status**: Gradle 8 bridge merged and retained unchanged in the Kotlin-only step. Earlier combined Gradle 9/Kotlin/Nexus implementation and version conclusions remain superseded, not a basis for this branch.
+- [x] Upgrade Gradle 8.14.5 to 9.7.1, update Nexus Publish Plugin to 2.0.0, and validate Java 26 locally
+- [x] Change the local CI matrix from Java 8/11/16 to 17/25/26 because Gradle 9 requires Java 17+ to launch
+- [ ] Push the final branch, open its PR, and pass the new remote CI matrix
+- **Status**: Implementation and local validation are complete on the final branch. No Gradle 9 PR, merge, or remote CI result exists yet. The earlier mixed `modernize/gradle-9` experiment remains superseded and is not the final branch.
 
 ### Phase 3 — Library Updates (one at a time, one PR each)
 - [x] Kotlin 1.9.25 to 2.4.20: present in base `9c505ac`; historical Java 17 validation is preserved below
-- Dokka → latest
+- [x] Dokka 1.9.20 to 2.2.0 with DGP v2: PR #167 merged as `bf26fd7` after Java 8/11/16 CI
 - [x] spek-testfiles replacement: local `SubjectLessSpec` registration support and native temporary directories, completed with the Kotest migration
-- Other build plugins (nexus-publish, git-version, etc.), one at a time; preserve publication architecture unless an explicit change is approved
-- **Status**: Kotlin 2.4.20 is present in the current base. The spek-testfiles replacement is locally complete as part of Phase 4. Dokka and other build-plugin updates remain pending.
+- [x] Nexus Publish Plugin 0.4.0 to 2.0.0: locally complete with the Gradle 9 work
+- [ ] Remaining tools and libraries, including any later git-version update, one at a time; preserve publication architecture unless an explicit change is approved
+- **Status**: Kotlin, Kotest, Dokka, and the local Nexus update are complete. Task 3 remains open because not every tool and library has been completed.
 
 ### Phase 4: Spek to Kotest Migration
 - [x] Replace all abstract and concrete Spek suites with Kotest `FunSpec`
@@ -92,7 +95,7 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - [x] Replace spek-testfiles temporary-directory support with unique native temporary directories; clean successful specs, retain failed fixtures, and surface cleanup failures
 - [x] Remove direct Spek dependencies and exclude the two Spek groups inherited through Atrium specs
 - [x] Retain every test without suppression
-- **Status**: Locally complete on Java 17. Pending review, commit, PR, and remote CI; not merged.
+- **Status**: Merged in PR #166 as `4bee3c1` after Java 8/11/16 CI passed.
 
 ### Phase 5 — Atrium Architecture Overview (documentation only)
 - Analyze how latest Atrium (0.x → 1.x) changes affect the project
@@ -121,20 +124,50 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 
 ## Current Branch
 
-`modernize/kotest` in `/tmp/opencode/atrium-kotest`, based on `9c505ac` and
-tracking `origin/master`. All source and build changes for the Kotest migration
-remain uncommitted. This document records the resulting local state without
-claiming a commit, PR, remote CI run, or merge.
+`modernize/gradle-9.7.1-java-26` in
+`/home/josh/Projekte/atrium-gradle-testkit-gradle9-recovery`, based on `bf26fd7`.
+That base includes Kotest PR #166, merged as `4bee3c1` after Java 8/11/16 CI,
+and Dokka 2.2.0 DGP v2 prerequisite PR #167, merged as `bf26fd7` after Java
+8/11/16 CI. The branch contains the locally validated 12-file Gradle 9 and Java
+26 modernization commits. It still requires push, a PR, and remote 17/25/26 CI.
+There is no remote 17/25/26 CI result or Gradle 9 merge to claim.
 
-The original `/home/josh/Projekte/atrium-gradle-testkit` worktree is currently
-on `renovate-config` at `b5b8214` and was not touched during this migration.
+The original `/home/josh/Projekte/atrium-gradle-testkit` worktree was not
+touched during this recovery.
 The previously preserved `modernize/gradle-9` branch remains at `fe99052`, but
-its former `/tmp/opencode/atrium-gradle-9-clean` worktree no longer exists. Do
-not resume or copy changes from that superseded attempt into this branch.
+its former `/tmp/opencode/atrium-gradle-9-clean` worktree no longer exists. It
+was an experimental, superseded attempt and must not be described as the final
+branch.
 
-Next move: review and commit the Kotest migration, open its PR, pass remote CI,
-and merge it first. Then recreate or rebase the Gradle 9 work from the
-Kotest-enabled `master` rather than resuming the preserved mixed worktree.
+Next move: push the branch, open its PR, and require the Java 17/25/26 matrix to
+pass before merge.
+
+## Gradle 9.7.1 and Java 26 Evidence (2026-09-16)
+
+The final branch upgrades the wrapper from Gradle 8.14.5 to 9.7.1 and the Nexus
+Publish Plugin from 0.4.0 to 2.0.0. Its local CI edit changes the matrix from
+Java 8/11/16 to 17/25/26. This raises only the build JVM floor: Gradle 9 cannot
+launch on Java 8, 11, or 16, while all six inspected published class files
+remain Java 8 bytecode with major version 52.
+
+Local clean test and clean build runs succeeded under Java 17.0.20, 25.0.4,
+and 26.0.1. The test XML totals are exactly 14 `BuildResult` tests, 69
+`BuildTask` tests, and 1 example test, all with zero failures, errors, or skips.
+All three published-module dependency guards passed. Dependency inspection found
+no Spek matches and selected Kotest 5.9.1 Java 8 variants. The official Gradle
+9.7.1 wrapper JAR SHA-256 is
+`7a9ce74cff467ca1bf60a4fcd9f05185acceda4d0f382434d393e17864262c5d`.
+
+The release dry-run graph includes each of the three publications, their signing
+tasks, GitHub Packages tasks, Sonatype tasks, and the ordered Sonatype close and
+release step. This verifies task graph construction only. No live publication,
+credential, signing, or Central Portal validation occurred, so live Central
+compatibility remains unverified.
+
+Known non-blocking output remains: Gradle 10 delegated-property and archive
+deprecations, Dokka's Gradle `package-list` warning, and Java 25/26 native-access
+and ClassGraph warnings. None was hidden or treated as proof of remote CI or live
+publication compatibility.
 
 ## Gradle 8 Bridge Evidence (2026-09-12)
 
@@ -512,8 +545,8 @@ Scoped exclusions on `atrium-specs` remove transitive
 for Spek reports no matching dependency on the migrated executable classpaths.
 Kotest `dependencyInsight` selects JVM version 8 variants. Local Java 8 runtime
 execution wasn't possible because this host has only JDK 17, 25, and 26
-installed. The existing CI Java 8, 11, and 16 matrix remains the remote runtime
-gate.
+installed. At this stage, the existing CI Java 8, 11, and 16 matrix remained the
+remote runtime gate.
 
 All commands below ran sequentially with Java 17 in
 `/tmp/opencode/atrium-kotest` and completed successfully.
@@ -538,10 +571,10 @@ unchecked `deleteRecursively()` could hide cleanup failure. Both are fixed by
 tracking setup/test success and checking the deletion result; focused suites
 still report 83 plus 1 passing tests after the correction.
 
-No commit, push, PR, publication, signing operation, CI run, or merge has
-occurred for this migration. Review, commit, open the PR, pass CI, and merge the
-Kotest work first. Then recreate or rebase the Gradle 9 work from the
-Kotest-enabled `master`.
+At the time of this local evidence, no commit, push, PR, publication, signing
+operation, CI run, or merge had occurred for the migration. It was subsequently
+committed and merged through PR #166 as `4bee3c1` after Java 8/11/16 CI passed.
+No publication or signing operation occurred as part of that prerequisite.
 
 ## Notes for Agents
 
