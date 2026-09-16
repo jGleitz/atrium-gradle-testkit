@@ -3,7 +3,7 @@ plugins {
 }
 
 repositories {
-	jcenter()
+	mavenCentral()
 }
 
 dependencies {
@@ -12,8 +12,8 @@ dependencies {
 
 	testImplementation(gradleTestKit())
 	// for your project, use this instead:
-	// testImplementation(name = "atrium-gradle-testkit-fluent-en", version = "<latest-release>", group = "de.joshuagleitze")
+	// testImplementation("de.joshuagleitze:atrium-gradle-testkit-fluent-en:<latest-release>")
 	testImplementation(project(":apis:atrium-gradle-testkit-fluent-en"))
-	testImplementation(name = "atrium-fluent-en_GB", version = atriumVersion, group = "ch.tutteli.atrium")
-	testImplementation(name = "kotest-runner-junit5", version = kotestVersion, group = "io.kotest")
+	testImplementation("ch.tutteli.atrium:atrium-fluent-en_GB:$atriumVersion")
+	testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }
