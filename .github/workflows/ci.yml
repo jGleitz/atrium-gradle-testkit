@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+        # TODO also test against the latest Kotlin version
         java-version: [ 17, 25, 26 ]
       fail-fast: false
     steps:

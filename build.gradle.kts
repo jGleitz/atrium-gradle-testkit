@@ -3,8 +3,10 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
     kotlin("jvm") version "2.4.20"
@@ -20,6 +22,7 @@ val javaReleaseVersion = providers.gradleProperty("javaReleaseVersion").map(Java
 val javaToolchainVersion = providers.gradleProperty("javaVersion")
     .map(JavaLanguageVersion::of)
     .orElse(javaReleaseVersion)
+val kotlinReleaseVersion = providers.gradleProperty("kotlinReleaseVersion").map(KotlinVersion::fromVersion)
 
 allprojects {
     repositories {
@@ -71,16 +74,19 @@ subprojects {
         tasks.withType<Test>().configureEach {
             useJUnitPlatform()
             reports.junitXml.required = true
-            systemProperty("kotlinVersion", project.getKotlinPluginVersion())
-            systemProperty("javaToolchainVersion", javaToolchainVersion.get().toString())
-            systemProperty("javaReleaseVersion", javaReleaseVersion.get().toString())
+            systemProperty("kotlinVersion", kotlinReleaseVersion.get().version)
+            systemProperty("javaVersion", javaReleaseVersion.get().toString())
         }
     }
 
     pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
-        tasks.withType<KotlinCompile>().configureEach {
+        extensions.configure<KotlinJvmProjectExtension> {
             compilerOptions {
+                // TODO test ABI compat
+                languageVersion = kotlinReleaseVersion
+                apiVersion = kotlinReleaseVersion
                 jvmTarget = javaReleaseVersion.map { JvmTarget.fromTarget(it.toString()) }
+
                 // TODO workaround for https://youtrack.jetbrains.com/issue/KT-41142
                 freeCompilerArgs.add("-Xno-optimized-callable-references")
             }

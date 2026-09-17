@@ -11,9 +11,8 @@ import java.nio.file.Files.createDirectories
 
 class KotlinPluginSpec : FunSpec({
     val projectDir = Files.createTempDirectory("atrium-gradle-testkit-example-")
-    val kotlinVersion = checkNotNull(System.getProperty("kotlinVersion"))
-    val javaToolchainVersion = checkNotNull(System.getProperty("javaToolchainVersion"))
-    val javaReleaseVersion = checkNotNull(System.getProperty("javaReleaseVersion"))
+    val kotlinVersion = checkNotNull(System.getProperty("kotlinVersion")) { "System property 'kotlinVersion'" }
+    val javaVersion = checkNotNull(System.getProperty("javaVersion")) { "System property 'javaVersion'" }
     var setupCompleted = false
     var testsSuccessful = true
 
@@ -25,22 +24,14 @@ class KotlinPluginSpec : FunSpec({
         )
         projectDir.resolve("build.gradle.kts").toFile().writeText(
             """
-			import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 			plugins {
 				application
-				kotlin("jvm") version "$kotlinVersion"
+				kotlin("jvm") version "$kotlinVersion.0"
 			}
 			
 			java {
-				toolchain.languageVersion = JavaLanguageVersion.of($javaToolchainVersion)
+				toolchain.languageVersion = JavaLanguageVersion.of($javaVersion)
 			}
-
-			kotlin {
-				compilerOptions {
-					jvmTarget = JvmTarget.fromTarget("$javaReleaseVersion")
-                }
-            }
 
 			repositories {
 				mavenCentral()

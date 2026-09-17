@@ -56,6 +56,7 @@ class KotlinPluginSpec: FunSpec({
 ## Compatibility
 
 This library requires:
+ * Kotlin ≥ 2.2
  * Java ≥ 17
 
 ## [Contributions welcome](http://contributionswelcome.org/)
