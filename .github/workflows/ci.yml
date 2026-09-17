@@ -34,15 +34,15 @@ jobs:
       - name: Prepare
         run: ./gradlew clean dependencies
         env:
-          ORG_GRADLE_PROJECT_javaVersion=${{ matrix.java-version }}
+          ORG_GRADLE_PROJECT_javaVersion: ${{ matrix.java-version }}
       - name: Build
         run: ./gradlew assemble testClasses
         env:
-          ORG_GRADLE_PROJECT_javaVersion=${{ matrix.java-version }}
+          ORG_GRADLE_PROJECT_javaVersion: ${{ matrix.java-version }}
       - name: Test
         run: ./gradlew test
         env:
-          ORG_GRADLE_PROJECT_javaVersion=${{ matrix.java-version }}
+          ORG_GRADLE_PROJECT_javaVersion: ${{ matrix.java-version }}
       - name: Publish Test Report
         uses: scacap/action-surefire-report@c38a2d74b9840ae8950a4387ae02b637421d0f39 # v1.13.0
         if: failure()
