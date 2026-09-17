@@ -8,12 +8,13 @@ dependencies {
 
 	api(project(":${rootProject.name}-logic"))
 	api(project(":translations:${rootProject.name}-translation-en"))
-	implementation(gradleTestKit())
-	implementation(name = "atrium-core-api", version = atriumVersion, group = "ch.tutteli.atrium")
-	implementation(name = "atrium-logic", version = atriumVersion, group = "ch.tutteli.atrium")
+	api(gradleTestKit())
+
+	implementation("ch.tutteli.atrium:atrium-core-api:$atriumVersion")
+	implementation("ch.tutteli.atrium:atrium-logic:$atriumVersion")
 
 	testImplementation(project(":api-spec"))
-	testImplementation(name = "kotest-runner-junit5", version = kotestVersion, group = "io.kotest")
+	testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
 }
 
 kotlin {

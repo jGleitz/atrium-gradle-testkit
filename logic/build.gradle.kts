@@ -5,10 +5,11 @@ plugins {
 dependencies {
 	val atriumVersion: String by project
 
+	api(gradleTestKit())
+
 	implementation(project(":translations:${rootProject.name}-translation-en"))
-	implementation(gradleTestKit())
-	implementation(name = "atrium-core-api", version = atriumVersion, group = "ch.tutteli.atrium")
-	implementation(name = "atrium-logic", version = atriumVersion, group = "ch.tutteli.atrium")
+	implementation("ch.tutteli.atrium:atrium-core-api:$atriumVersion")
+	implementation("ch.tutteli.atrium:atrium-logic:$atriumVersion")
 }
 
 var willBePublished: Boolean by extra(true)

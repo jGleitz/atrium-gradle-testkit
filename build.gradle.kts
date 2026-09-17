@@ -1,23 +1,33 @@
-import de.marcphilipp.gradle.nexus.NexusRepository
-import org.gradle.api.JavaVersion.VERSION_1_8
+import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.testing.Test
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-	kotlin("jvm") version "2.4.20"
-	id("com.palantir.git-version") version "3.4.0"
-	id("org.jetbrains.dokka") version "2.2.0"
-	id("org.jetbrains.dokka-javadoc") version "2.2.0"
-	id("de.marcphilipp.nexus-publish") version "0.4.0"
-	id("io.codearte.nexus-staging") version "0.30.0"
-	`maven-publish`
-	signing
+    kotlin("jvm") version "2.4.20"
+    id("com.palantir.git-version") version "3.4.0"
+    id("org.jetbrains.dokka") version "2.2.0"
+    id("org.jetbrains.dokka-javadoc") version "2.2.0"
+    id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
+    `maven-publish`
+    signing
 }
 
+val javaReleaseVersion = providers.gradleProperty("javaReleaseVersion").map(JavaLanguageVersion::of)
+val javaToolchainVersion = providers.gradleProperty("javaVersion")
+    .map(JavaLanguageVersion::of)
+    .orElse(javaReleaseVersion)
+val kotlinReleaseVersion = providers.gradleProperty("kotlinReleaseVersion").map(KotlinVersion::fromVersion)
+
 allprojects {
-	repositories {
-		mavenCentral()
-	}
+    repositories {
+        mavenCentral()
+    }
 }
 
 group = "de.joshuagleitze"
@@ -31,186 +41,216 @@ val githubRepository: String? by project
 val githubOwner = githubRepository?.split("/")?.get(0)
 val githubToken: String? by project
 
-nexusStaging {
-	username = ossrhUsername
-	password = ossrhPassword
-	numberOfRetries = 42
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl = uri("https://ossrh-staging-api.central.sonatype.com/service/local/")
+            snapshotRepositoryUrl = uri("https://central.sonatype.com/repository/maven-snapshots/")
+            username = ossrhUsername
+            password = ossrhPassword
+        }
+    }
+    transitionCheckOptions {
+        maxRetries = 42
+    }
 }
 
 subprojects {
-	group = rootProject.group
-	version = rootProject.version
-	status = rootProject.status
+    group = rootProject.group
+    version = rootProject.version
+    status = rootProject.status
 
-	afterEvaluate {
-		if (plugins.hasPlugin("org.jetbrains.kotlin.jvm")) {
-			tasks.test {
-				useJUnitPlatform()
-				reports.junitXml.required.set(true)
-			}
+    pluginManager.withPlugin("java") {
+        extensions.configure<JavaPluginExtension> {
+            toolchain {
+                languageVersion = javaToolchainVersion
+            }
+        }
 
-			java {
-				sourceCompatibility = VERSION_1_8
-				targetCompatibility = VERSION_1_8
-			}
+        tasks.withType<JavaCompile>().configureEach {
+            options.release = javaReleaseVersion.map(JavaLanguageVersion::asInt)
+        }
 
-			tasks.withType<KotlinCompile> {
-				compilerOptions {
-					jvmTarget.set(JvmTarget.JVM_1_8)
-					// TODO workaround for https://youtrack.jetbrains.com/issue/KT-41142
-					freeCompilerArgs.add("-Xno-optimized-callable-references")
-				}
-			}
-		}
+        tasks.withType<Test>().configureEach {
+            useJUnitPlatform()
+            reports.junitXml.required = true
+            systemProperty("kotlinVersion", kotlinReleaseVersion.get().version)
+            systemProperty("javaVersion", javaReleaseVersion.get().toString())
+        }
+    }
 
-		if (willBePublished) {
-			apply {
-				plugin("org.jetbrains.dokka")
-				plugin("org.jetbrains.dokka-javadoc")
-				plugin("de.marcphilipp.nexus-publish")
-				plugin("org.gradle.maven-publish")
-				plugin("org.gradle.signing")
-			}
+    pluginManager.withPlugin("org.jetbrains.kotlin.jvm") {
+        extensions.configure<KotlinJvmProjectExtension> {
+            compilerOptions {
+                // TODO test ABI compat
+                languageVersion = kotlinReleaseVersion
+                apiVersion = kotlinReleaseVersion
+                jvmTarget = javaReleaseVersion.map { JvmTarget.fromTarget(it.toString()) }
 
-			val sourcesJar by tasks.registering(Jar::class) {
-				group = "build"
-				description = "Assembles the source code into a jar"
-				archiveClassifier.set("sources")
-				from(sourceSets.main.get().allSource)
-			}
+                // TODO workaround for https://youtrack.jetbrains.com/issue/KT-41142
+                freeCompilerArgs.add("-Xno-optimized-callable-references")
+            }
+        }
+    }
 
-			dokka {
-				dokkaSourceSets.named("main") {
-					sourceLink {
-						val projectPath = projectDir.absoluteFile.relativeTo(rootProject.projectDir.absoluteFile)
-						localDirectory.set(file("src/main/kotlin"))
-						remoteUrl("https://github.com/$githubRepository/blob/$gitRef/$projectPath/src/main/kotlin")
-						remoteLineSuffix.set("#L")
-					}
-					externalDocumentationLinks.register("gradle") {
-						url("https://docs.gradle.org/current/javadoc/")
-					}
-					val atriumVersion: String by project
-					externalDocumentationLinks.register("atrium") {
-						url("https://docs.atriumlib.org/$atriumVersion/doc/")
-					}
-				}
-			}
+    afterEvaluate {
+        if (willBePublished) {
+            apply {
+                plugin("org.jetbrains.dokka")
+                plugin("org.jetbrains.dokka-javadoc")
+                plugin("org.gradle.maven-publish")
+                plugin("org.gradle.signing")
+            }
 
-			val dokkaJar by tasks.registering(Jar::class) {
-				group = "build"
-				description = "Assembles the Kotlin docs with Dokka"
-				archiveClassifier.set("javadoc")
-				from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
-			}
+            val sourcesJar by tasks.registering(Jar::class) {
+                group = "build"
+                description = "Assembles the source code into a jar"
+                archiveClassifier = "sources"
+                from(sourceSets.main.get().allSource)
+            }
 
-			artifacts {
-				archives(sourcesJar)
-				archives(dokkaJar)
-			}
+            dokka {
+                dokkaSourceSets.named("main") {
+                    sourceLink {
+                        val projectPath = projectDir.absoluteFile.relativeTo(rootProject.projectDir.absoluteFile)
+                        localDirectory = file("src/main/kotlin")
+                        remoteUrl("https://github.com/$githubRepository/blob/$gitRef/$projectPath/src/main/kotlin")
+                        remoteLineSuffix = "#L"
+                    }
+                    externalDocumentationLinks.register("gradle") {
+                        url("https://docs.gradle.org/current/javadoc/")
+                    }
+                    val atriumVersion: String by project
+                    externalDocumentationLinks.register("atrium") {
+                        url("https://docs.atriumlib.org/$atriumVersion/doc/")
+                    }
+                }
+            }
 
-			lateinit var publication: MavenPublication
-			lateinit var githubPackages: ArtifactRepository
-			lateinit var mavenCentral: NexusRepository
+            val dokkaJar by tasks.registering(Jar::class) {
+                group = "build"
+                description = "Assembles the Kotlin docs with Dokka"
+                archiveClassifier = "javadoc"
+                from(tasks.dokkaGeneratePublicationJavadoc.flatMap { it.outputDirectory })
+            }
 
-			publishing {
-				publications {
-					publication = create<MavenPublication>("maven") {
-						from(components["java"])
-						artifact(sourcesJar)
-						artifact(dokkaJar)
+            artifacts {
+                archives(sourcesJar)
+                archives(dokkaJar)
+            }
 
-						pom {
-							name.set(provider { "$groupId:$artifactId" })
-							description.set("Atrium assertions for testing Gradle plugins.")
-							inceptionYear.set("2020")
-							url.set("https://github.com/$githubRepository")
-							ciManagement {
-								system.set("GitHub Actions")
-								url.set("https://github.com/$githubRepository/actions")
-							}
-							issueManagement {
-								system.set("GitHub Issues")
-								url.set("https://github.com/$githubRepository/issues")
-							}
-							developers {
-								developer {
-									name.set("Joshua Gleitze")
-									email.set("dev@joshuagleitze.de")
-								}
-							}
-							scm {
-								connection.set("scm:git:https://github.com/$githubRepository.git")
-								developerConnection.set("scm:git:git://git@github.com:$githubRepository.git")
-								url.set("https://github.com/$githubRepository")
-							}
-							licenses {
-								license {
-									name.set("MIT")
-									url.set("https://opensource.org/licenses/MIT")
-									distribution.set("repo")
-								}
-							}
-						}
-					}
-				}
-				repositories {
-					githubPackages = maven("https://maven.pkg.github.com/$githubRepository") {
-						name = "GitHubPackages"
-						credentials {
-							username = githubOwner
-							password = githubToken
-						}
-					}
-				}
-			}
+            lateinit var publication: MavenPublication
+            lateinit var githubPackages: ArtifactRepository
 
-			nexusPublishing {
-				repositories {
-					mavenCentral = sonatype {
-						username.set(ossrhUsername)
-						password.set(ossrhPassword)
-					}
-				}
-			}
+            publishing {
+                publications {
+                    publication = create<MavenPublication>("maven") {
+                        from(components["java"])
+                        artifact(sourcesJar)
+                        artifact(dokkaJar)
 
-			val publishToGithub = tasks.named("publishAllPublicationsTo${githubPackages.name.capitalize()}Repository")
-			val publishToMavenCentral = tasks.named("publishTo${mavenCentral.name.capitalize()}")
+                        pom {
+                            name = provider { "$groupId:$artifactId" }
+                            description = "Atrium assertions for testing Gradle plugins."
+                            inceptionYear = "2020"
+                            url = "https://github.com/$githubRepository"
+                            ciManagement {
+                                system = "GitHub Actions"
+                                url = "https://github.com/$githubRepository/actions"
+                            }
+                            issueManagement {
+                                system = "GitHub Issues"
+                                url = "https://github.com/$githubRepository/issues"
+                            }
+                            developers {
+                                developer {
+                                    name = "Joshua Gleitze"
+                                    email = "dev@joshuagleitze.de"
+                                }
+                            }
+                            scm {
+                                connection = "scm:git:https://github.com/$githubRepository.git"
+                                developerConnection = "scm:git:git://git@github.com:$githubRepository.git"
+                                url = "https://github.com/$githubRepository"
+                            }
+                            licenses {
+                                license {
+                                    name = "MIT"
+                                    url = "https://opensource.org/licenses/MIT"
+                                    distribution = "repo"
+                                }
+                            }
+                        }
+                    }
+                }
+                repositories {
+                    githubPackages = maven("https://maven.pkg.github.com/$githubRepository") {
+                        name = "GitHubPackages"
+                        credentials {
+                            username = githubOwner
+                            password = githubToken
+                        }
+                    }
+                }
+            }
 
-			signing {
-				val signingKey: String? by project
-				val signingKeyPassword: String? by project
-				useInMemoryPgpKeys(signingKey, signingKeyPassword)
-				sign(publication)
-			}
+            val publishToGithub =
+                tasks.named("publishAllPublicationsTo${githubPackages.name.replaceFirstChar { it.uppercase() }}Repository")
+            val publishToSonatype = tasks.named("publishToSonatype")
 
-			val checkDependenciesBeforePublishing by tasks.registering {
-				group = "publishing"
-				description = "Checks that all dependencies are also being published"
+            signing {
+                val signingKey: String? by project
+                val signingKeyPassword: String? by project
+                useInMemoryPgpKeys(signingKey, signingKeyPassword)
+                sign(publication)
+            }
 
-				doFirst {
-					project.configurations.runtimeClasspath {
-						allDependencies.withType<ProjectDependency> {
-							check(dependencyProject.willBePublished) {
-								"This project has a dependency on $dependencyProject, but the latter will not be published!"
-							}
-						}
-					}
-				}
-			}
+            val checkDependenciesBeforePublishing by tasks.registering {
+                group = "publishing"
+                description = "Checks that all dependencies are also being published"
 
-			rootProject.tasks.closeAndReleaseRepository { mustRunAfter(publishToMavenCentral) }
+                doFirst {
+                    val root = project.rootProject
+                    project.configurations.runtimeClasspath {
+                        allDependencies.withType<ProjectDependency> {
+                            val dependencyProject = root.project(path)
+                            check(dependencyProject.willBePublished) {
+                                "This project has a dependency on $dependencyProject, but the latter will not be published!"
+                            }
+                        }
+                    }
+                }
+            }
 
-			publishToMavenCentral { dependsOn(checkDependenciesBeforePublishing) }
-			publishToGithub { dependsOn(checkDependenciesBeforePublishing) }
+            tasks.register("release") {
+                group = "release"
+                description = "Releases the project to all remote repositories"
+                dependsOn(publishToGithub, publishToSonatype, ":closeAndReleaseSonatypeStagingRepository")
+            }
+        }
+    }
+}
 
-			task("release") {
-				group = "release"
-				description = "Releases the project to all remote repositories"
-				dependsOn(publishToGithub, publishToMavenCentral, rootProject.tasks.closeAndReleaseRepository)
-			}
-		}
-	}
+gradle.projectsEvaluated {
+    val publishedProjects = subprojects.filter { it.willBePublished }
+    val publishToSonatype = listOf(tasks.named("publishToSonatype")) +
+            publishedProjects.map { it.tasks.named("publishToSonatype") }
+    val closeAndReleaseSonatypeStagingRepository = tasks.named("closeAndReleaseSonatypeStagingRepository")
+    val dependencyChecks = publishedProjects
+        .map { it.tasks.named("checkDependenciesBeforePublishing") }
+
+    tasks.named("initializeSonatypeStagingRepository").configure { dependsOn(dependencyChecks) }
+    publishToSonatype.forEach { it.configure { dependsOn(dependencyChecks) } }
+    closeAndReleaseSonatypeStagingRepository.configure { mustRunAfter(publishToSonatype) }
+    publishedProjects.forEach {
+        listOf(
+            it.tasks.named("publishMavenPublicationToSonatypeRepository"),
+            it.tasks.named("publishMavenPublicationToGitHubPackagesRepository"),
+            it.tasks.named("publishAllPublicationsToGitHubPackagesRepository")
+        ).forEach { publicationTask ->
+            publicationTask.configure { dependsOn(dependencyChecks) }
+        }
+    }
 }
 
 val Project.isSnapshot get() = versionDetails.commitDistance != 0

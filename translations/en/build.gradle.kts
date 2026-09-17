@@ -6,7 +6,7 @@ dependencies {
 	val atriumVersion: String by project
 
 	implementation(gradleTestKit())
-	implementation(name = "atrium-core-api", version = atriumVersion, group = "ch.tutteli.atrium")
+	implementation("ch.tutteli.atrium:atrium-core-api:$atriumVersion")
 }
 
 var willBePublished: Boolean by extra(true)
