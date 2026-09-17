@@ -4,6 +4,7 @@ build/
 
 ### IntelliJ
 /.idea/
+.kotlin/
 
 ### Agent tooling (opencode/omo session files, not for VCS)
 /.omo/
