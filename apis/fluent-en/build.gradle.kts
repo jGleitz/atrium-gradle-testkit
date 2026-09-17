@@ -8,7 +8,8 @@ dependencies {
 
 	api(project(":${rootProject.name}-logic"))
 	api(project(":translations:${rootProject.name}-translation-en"))
-	implementation(gradleTestKit())
+	api(gradleTestKit())
+
 	implementation("ch.tutteli.atrium:atrium-core-api:$atriumVersion")
 	implementation("ch.tutteli.atrium:atrium-logic:$atriumVersion")
 
