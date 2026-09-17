@@ -1,4 +1,4 @@
-# atrium-gradle-testkit [![CI Status](https://github.com/jGleitz/atrium-gradle-testkit/workflows/CI/badge.svg)](https://github.com/jGleitz/atrium-gradle-testkit/actions) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/de.joshuagleitze/atrium-gradle-testkit-fluent-en/badge.svg)](https://maven-badges.herokuapp.com/maven-central/de.joshuagleitze/atrium-gradle-testkit-fluent-en)
+# atrium-gradle-testkit [![CI Status](https://github.com/jGleitz/atrium-gradle-testkit/workflows/CI/badge.svg)](https://github.com/jGleitz/atrium-gradle-testkit/actions) ![Maven Central Version](https://img.shields.io/maven-central/v/de.joshuagleitze/atrium-gradle-testkit-fluent-en?strategy=releaseProperty&logo=sonatype&link=https%3A%2F%2Fcentral.sonatype.com%2Fartifact%2Fde.joshuagleitze%2Fatrium-gradle-testkit-fluent-en)
 
 [Atrium](https://github.com/robstoll/atrium) assertions to test [Gradle plugins with TestKit](https://docs.gradle.org/current/userguide/test_kit.html).
 
