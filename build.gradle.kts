@@ -9,7 +9,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
-    kotlin("jvm") version "2.4.20"
+    kotlin("jvm") version "2.4.21"
     id("com.palantir.git-version") version "3.4.0"
     id("org.jetbrains.dokka") version "2.2.0"
     id("org.jetbrains.dokka-javadoc") version "2.2.0"
