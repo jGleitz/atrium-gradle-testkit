@@ -8,7 +8,7 @@ repositories {
 
 dependencies {
 	val kotestVersion: String by project
-	val atriumVersion = "0.16.0"
+	val atriumVersion = "0.18.0"
 
 	testImplementation(gradleTestKit())
 	// for your project, use this instead:
