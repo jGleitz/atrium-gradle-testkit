@@ -19,7 +19,7 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 - [ ] **Task 2**: Get it to build with Java 26 (PR #168 baseline CI passed; the uncommitted Java 17 toolchain follow-up still needs independent review and remote CI)
 - [ ] **Task 3**: Update all libraries and tools **except Atrium** (Atrium update requires larger changes, deferred)
 - [x] **Task 4**: Migrate from Spek to Kotest (PR #166 merged as `4bee3c1` after Java 8/11/16 CI)
-- [ ] **Task 5**: Prepare an overview of architecture changes needed for latest Atrium (do NOT implement, just prepare information for next agent)
+- [x] **Task 5**: Prepare an overview of architecture changes needed for latest Atrium (do NOT implement, just prepare information for next agent)
 
 ## Current State (validated local Gradle 9 and Java 26 modernization)
 
@@ -102,7 +102,7 @@ Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-pu
 - Analyze how latest Atrium (0.x → 1.x) changes affect the project
 - Document required architectural changes
 - Identify simplifications (fewer Gradle projects?)
-- **Status**: Not started
+- **Status**: Overview done, available in [`atrium-migration.md`](./atrium-migration.md).
 
 ## Working Agreements (from the brief)
 
