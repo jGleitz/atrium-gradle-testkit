@@ -7,6 +7,5 @@ atriumGradleTestkitModule {
 }
 
 dependencies {
-	implementation(gradleTestKit())
-	implementation(libs.atrium.core.api)
+	api(libs.atrium.core.api)
 }
