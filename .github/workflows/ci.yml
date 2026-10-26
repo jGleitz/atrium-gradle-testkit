@@ -12,7 +12,7 @@ jobs:
     strategy:
       matrix:
         # TODO also test against the latest Kotlin version
-        java-version: [ 17, 25, 26 ]
+        java-version: [ 21, 25, 27 ]
       fail-fast: false
     steps:
       - name: Checkout
