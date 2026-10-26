@@ -4,7 +4,7 @@ plugins {
 	`kotlin-dsl`
 }
 
-// The build logic runs in the Gradle daemon, so it targets the oldest Java version that Gradle supports
+// The build logic must run on any JVM that can run Gradle, not only on the one that mise selects
 tasks.compileJava {
 	options.release = 17
 }
