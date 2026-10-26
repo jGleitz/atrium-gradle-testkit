@@ -1,8 +1,3 @@
-[versions]
-atrium = "0.16.0"
-
 [libraries]
-atrium-core-api = { module = "ch.tutteli.atrium:atrium-core-api", version.ref = "atrium" }
-atrium-fluent-en-gb = { module = "ch.tutteli.atrium:atrium-fluent-en_GB", version.ref = "atrium" }
-atrium-logic = { module = "ch.tutteli.atrium:atrium-logic", version.ref = "atrium" }
-atrium-specs = { module = "ch.tutteli.atrium:atrium-specs", version.ref = "atrium" }
+atrium-core-api = "ch.tutteli.atrium:atrium-core-api:0.16.0"
+atrium-logic = "ch.tutteli.atrium:atrium-logic:0.16.0"

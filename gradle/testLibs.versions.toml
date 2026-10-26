@@ -1,2 +1,4 @@
 [libraries]
+atrium-fluent-en-gb = "ch.tutteli.atrium:atrium-fluent-en_GB:0.16.0"
+atrium-specs = "ch.tutteli.atrium:atrium-specs:0.16.0"
 kotest-runner-junit5 = "io.kotest:kotest-runner-junit5:6.2.6"
