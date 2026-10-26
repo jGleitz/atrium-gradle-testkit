@@ -1,15 +1,15 @@
 plugins {
-	kotlin("jvm")
+	id("atrium-gradle-testkit-module")
+}
+
+atriumGradleTestkitModule {
+	artifactId = "atrium-gradle-testkit-logic"
 }
 
 dependencies {
-	val atriumVersion: String by project
-
 	api(gradleTestKit())
 
-	implementation(project(":translations:${rootProject.name}-translation-en"))
-	implementation("ch.tutteli.atrium:atrium-core-api:$atriumVersion")
-	implementation("ch.tutteli.atrium:atrium-logic:$atriumVersion")
+	implementation(project(":translations:en"))
+	implementation(libs.atrium.core.api)
+	implementation(libs.atrium.logic)
 }
-
-var willBePublished: Boolean by extra(true)

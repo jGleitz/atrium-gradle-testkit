@@ -1,24 +1,23 @@
 plugins {
-	kotlin("jvm")
+	id("atrium-gradle-testkit-module")
+}
+
+atriumGradleTestkitModule {
+	artifactId = "atrium-gradle-testkit-fluent-en"
 }
 
 dependencies {
-	val kotestVersion: String by project
-	val atriumVersion: String by project
-
-	api(project(":${rootProject.name}-logic"))
-	api(project(":translations:${rootProject.name}-translation-en"))
+	api(project(":logic"))
+	api(project(":translations:en"))
 	api(gradleTestKit())
 
-	implementation("ch.tutteli.atrium:atrium-core-api:$atriumVersion")
-	implementation("ch.tutteli.atrium:atrium-logic:$atriumVersion")
+	implementation(libs.atrium.core.api)
+	implementation(libs.atrium.logic)
 
 	testImplementation(project(":api-spec"))
-	testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
+	testImplementation(testLibs.kotest.runner.junit5)
 }
 
 kotlin {
 	explicitApi()
 }
-
-var willBePublished: Boolean by extra(true)

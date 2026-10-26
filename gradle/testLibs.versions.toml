@@ -1,0 +1,2 @@
+[libraries]
+kotest-runner-junit5 = "io.kotest:kotest-runner-junit5:6.2.6"
