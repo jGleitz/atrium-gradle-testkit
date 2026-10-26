@@ -32,8 +32,8 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 | Atrium | 0.16.0 | **frozen** until other updates are done |
 | Spek / spek-testfiles | removed | executable Spek dependencies removed; scoped exclusions block transitive `org.spekframework.spek2` and `ch.tutteli.spek` artifacts |
 | Dokka | 2.2.0 | DGP v2 prerequisite merged in PR #167 as `bf26fd7` |
-| palantir git-version | 3.4.0 | versioning |
-| nexus-publish | 2.0.0 | local Gradle 9 update; publication architecture retained |
+| Versioning | `version` Gradle property | replaced palantir git-version; releases pass their tag, local builds use `local` |
+| vanniktech maven-publish | 0.37.0 | replaced nexus-publish, the signing setup, and the hand-made sources and javadoc jars |
 | CI | GitHub Actions | Temurin 26 launcher plus Temurin toolchains 17/25/26; the original PR #168 matrix passed, while this uncommitted split-launcher design still needs remote validation |
 
 ## Project Structure
@@ -44,11 +44,11 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 ├── example-project/   # Kotest TestKit usage example with an isolated temporary project
 ├── logic/             # core assertion logic (published)
 ├── translations/en/   # English translations (published)
-└── build.gradle.kts   # root build (handles publishing, dokka, versioning)
+└── build-logic/       # included build with the convention plugins (Kotlin, coordinates, documentation, publishing)
 ```
 
-Published modules: `apis:fluent-en`, `logic`, `translations:en` (via `willBePublished` extra flag).
-Root project: releases to GitHub Packages + Sonatype/Maven Central via `nexus-publish`, signed via the Gradle signing plugin.
+Published modules: `apis:fluent-en`, `logic`, `translations:en` (they apply the `atrium-gradle-testkit-module` convention plugin).
+Each published module releases to GitHub Packages + Maven Central via the vanniktech maven-publish plugin, which also signs the publications.
 
 ## Phase Status
 
@@ -608,6 +608,6 @@ No publication or signing operation occurred as part of that prerequisite.
 - Omit `-PjavaVersion` for the default Java 17 toolchain; pass it explicitly for 25/26 checks
 - Always run publication/release validation with `-PjavaVersion=17`
 - Build file is Kotlin DSL (`build.gradle.kts`)
-- Publishing is gated by `willBePublished` extra property
+- Publishing is enabled by applying the `atrium-gradle-testkit-module` convention plugin
 - Repository: `jGleitz/atrium-gradle-testkit`
 - When updating this file, keep the phase status checkboxes current so the next agent knows where things stand.

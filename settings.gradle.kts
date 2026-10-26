@@ -1,3 +1,19 @@
+pluginManagement {
+	includeBuild("build-logic")
+}
+
+plugins {
+	id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+}
+
+dependencyResolutionManagement {
+	versionCatalogs {
+		create("testLibs") {
+			from(files("gradle/testLibs.versions.toml"))
+		}
+	}
+}
+
 rootProject.name = "atrium-gradle-testkit"
 
 include(
@@ -7,7 +23,3 @@ include(
 	"logic",
 	"translations:en"
 )
-
-project(":apis:fluent-en").name = "${rootProject.name}-fluent-en"
-project(":logic").name = "${rootProject.name}-logic"
-project(":translations:en").name = "${rootProject.name}-translation-en"
