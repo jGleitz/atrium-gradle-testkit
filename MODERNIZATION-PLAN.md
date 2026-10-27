@@ -25,11 +25,13 @@ This file is the concise current index. The authoritative plan is the work plan 
 
 | Package | Status |
 |---------|--------|
-| 1. Reconcile baseline and modernization records | **in progress** - evidence recorded, commit `docs: reconcile modernization baseline and support policy` awaiting review/merge |
-| 2-4 | not started |
-| 5. Add metadata-only conventional PR title validation | **done** - workflow, actionlint, pinned-validator fixtures and static negative check recorded in `.omo/evidence/major-release-modernization/5/`; commit `ci: validate conventional pull request titles` awaiting merge |
+| 1. Reconcile baseline and modernization records | **done** - merged in #185 (`62e2091`); evidence in `1/` |
+| 2. Fail closed on every remote publication path | not started |
+| 3. Make real task-outcome fixtures deterministic | **in progress** - PR #190 (`9762984`) awaiting merge; evidence in `3/` |
+| 4. Remove Atrium test-helper coupling under Kotest | not started |
+| 5. Add metadata-only conventional PR title validation | **done** - merged in #188 (`5713c01`); evidence in `5/` |
 | 6-21 | not started |
-| 22. Align conventional release rules and Renovate commits | **in progress** - pinned release tooling in `.github/release`, `.releaserc.yaml` rules, release-rule tests and Renovate dependency-type evidence recorded in `.omo/evidence/major-release-modernization/22/`; commit `build: align conventional release and dependency update rules` awaiting review/merge |
+| 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 
 Update this table, with the immutable merge SHA and evidence location, in every package.

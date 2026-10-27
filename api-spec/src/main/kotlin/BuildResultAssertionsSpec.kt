@@ -20,26 +20,20 @@ import de.joshuagleitze.test.gradle.translation.en.BuildResultAssertions.TASK
 import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.BuildTask
-import java.nio.file.Files
 
 abstract class BuildResultAssertionsSpec(
 	outputFeature: Feature0<BuildResult, String>,
 	outputFun: Fun1<BuildResult, Expect<String>.() -> Unit>,
 	taskFeature: Feature1<BuildResult, String, BuildTask?>
 ): FunSpec({
-	val projectFolder = Files.createTempDirectory("atrium-gradle-testkit-build-result-")
-	var setupCompleted = false
-	var testsSuccessful = true
+	val fixtures = TemporaryFixtures(this, "atrium-gradle-testkit-build-result-")
+	lateinit var loggingTaskResult: BuildResult
 
 	beforeSpec {
-		projectFolder.resolve("settings.gradle.kts").toFile().writeText(
+		val projectDir = fixtures.newDirectory("logging")
+		projectDir.writeGradleProject(
 			"""
-			rootProject.name = "testProject"
-			""".trimIndent()
-		)
-		projectFolder.resolve("build.gradle.kts").toFile().writeText(
-			"""
-			val logHamlet by tasks.registering {
+			tasks.register("logHamlet") {
 				doLast {
 					println(
 						${"\""}""
@@ -52,26 +46,11 @@ abstract class BuildResultAssertionsSpec(
 					)
 				}
 			}
-		""".trimIndent()
+			""".trimIndent()
 		)
-		setupCompleted = true
+		loggingTaskResult = runGradle(projectDir, "logHamlet")
+		fixtures.setupCompleted()
 	}
-
-	afterTest { (_, result) ->
-		if (result.isErrorOrFailure) {
-			testsSuccessful = false
-		}
-	}
-
-	afterSpec {
-		if (setupCompleted && testsSuccessful) {
-			check(projectFolder.toFile().deleteRecursively()) {
-				"Failed to delete temporary project directory: $projectFolder"
-			}
-		}
-	}
-
-	val loggingTaskResult by lazy { runGradle(projectFolder, "logHamlet") }
 
 	registerSubjectLessSpec<BuildResult>(
 		"",
