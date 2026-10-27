@@ -56,8 +56,10 @@ class KotlinPluginSpec: FunSpec({
 ## Compatibility
 
 This library requires:
- * Kotlin ≥ 2.2
- * Java ≥ 17
+ * Kotlin ≥ 2.2 (the library is compiled with Kotlin language and API version 2.2, so consumers need a compiler that reads these)
+ * Java ≥ 21 (the library's bytecode targets Java 21, so the JVM running your tests must be Java 21 or newer)
+
+For contributors: the Gradle launcher JDK (Temurin 27, selected by `mise.toml`) is independent of the JDK toolchain used to compile and test (21, 25 or 27, CI tests all three), the bytecode target (Java 21, `javaReleaseVersion`) and the Kotlin language/API version (2.2, `kotlinReleaseVersion`); the Kotlin compiler itself is the current Kotlin Gradle plugin version from the version catalog.
 
 ## [Contributions welcome](http://contributionswelcome.org/)
 

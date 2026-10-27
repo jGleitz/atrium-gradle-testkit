@@ -1,4 +1,40 @@
-# atrium-gradle-testkit Modernization Plan
+# atrium-gradle-testkit Modernization Progress
+
+> **Last updated**: 2026-10-27 (package 1)
+> **Base**: `origin/main` `c077c11`; baseline gate green (84 tests, 0 failures); latest public release 1.0.1.
+
+This file is the concise current index. The authoritative plan is the work plan named `major-release-modernization` (`.omo/plans/major-release-modernization.md` in the control checkout; `.omo/` is gitignored, so it is not part of the repository). Evidence for package N lives in `.omo/evidence/major-release-modernization/N/` of the control checkout `/home/josh/Projekte/atrium-gradle-testkit`, never in a task worktree. Everything after the "Historical appendix" heading is history and must not be used as instructions.
+
+## Current state (main `c077c11`, verified 2026-10-27)
+
+| Component | Value |
+|-----------|-------|
+| Gradle | 9.8.2 (wrapper) |
+| Gradle launcher JDK | Temurin 27 (`mise.toml`; also Temurin 25/21 and Gradle 9.8.2/8.14.6, Node 24 are provisioned there) |
+| JDK toolchain for compile/test | `javaVersion` property, default 21; CI tests 21, 25 and 27 |
+| Bytecode target | Java 21 (`javaReleaseVersion`, deliberate decision in commit `f9c25e0`; do not revert to 17) |
+| Kotlin language/API version | 2.2 (`kotlinReleaseVersion`) |
+| Kotlin compiler (KGP) | 2.4.21 |
+| Test framework | Kotest 6.2.6 (shared `api-spec` suites run through `apis:fluent-en`) |
+| Atrium | 0.16.0 (upgrade is packages 6-10) |
+| Dokka / Vanniktech publish | 2.2.0 / 0.37.0 |
+| Public releases | 1.0.1 (Maven Central `de.joshuagleitze:atrium-gradle-testkit-{fluent-en,logic,translation-en}`, GitHub v1.0.1) |
+| Modules | `api-spec`, `apis:fluent-en`, `logic`, `translations:en`, `example-project` (included build `build-logic`) |
+
+## Package progress (27 packages, see the work plan for scope and dependencies)
+
+| Package | Status |
+|---------|--------|
+| 1. Reconcile baseline and modernization records | **in progress** - evidence recorded, commit `docs: reconcile modernization baseline and support policy` awaiting review/merge |
+| 2-27 | not started |
+
+Update this table, with the immutable merge SHA and evidence location, in every package.
+
+---
+
+# Historical appendix (state of 2026-09-17, superseded)
+
+> Everything below describes the earlier Gradle 9.7.1 / Java 17 / Kotlin 2.4.20 / Temurin 26 modernization and was **not** updated. It mentions removed or replaced things (`.sdkmanrc`, Java 17 minimum, `/tmp` worktrees, PR #168 follow-up). Use it for history only; current facts are above.
 
 > **Coordinator**: Sisyphus (AI)
 > **Last Updated**: 2026-09-17
