@@ -26,7 +26,9 @@ This file is the concise current index. The authoritative plan is the work plan 
 | Package | Status |
 |---------|--------|
 | 1. Reconcile baseline and modernization records | **in progress** - evidence recorded, commit `docs: reconcile modernization baseline and support policy` awaiting review/merge |
-| 2-27 | not started |
+| 2-4 | not started |
+| 5. Add metadata-only conventional PR title validation | **done** - workflow, actionlint, pinned-validator fixtures and static negative check recorded in `.omo/evidence/major-release-modernization/5/`; commit `ci: validate conventional pull request titles` awaiting merge |
+| 6-27 | not started |
 
 Update this table, with the immutable merge SHA and evidence location, in every package.
 
