@@ -27,8 +27,8 @@ This file is the concise current index. The authoritative plan is the work plan 
 |---------|--------|
 | 1. Reconcile baseline and modernization records | **done** - merged in #185 (`62e2091`); evidence in `1/` |
 | 2. Fail closed on every remote publication path | not started |
-| 3. Make real task-outcome fixtures deterministic | **in progress** - PR #190 (`9762984`) awaiting merge; evidence in `3/` |
-| 4. Remove Atrium test-helper coupling under Kotest | not started |
+| 3. Make real task-outcome fixtures deterministic | **done** - merged in #190 (`a12688f`); evidence in `3/` |
+| 4. Remove Atrium test-helper coupling under Kotest | **in progress** - commit `test: replace Atrium specs helpers with direct Kotest coverage` awaiting review/merge; evidence in `4/` |
 | 5. Add metadata-only conventional PR title validation | **done** - merged in #188 (`5713c01`); evidence in `5/` |
 | 6-21 | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |

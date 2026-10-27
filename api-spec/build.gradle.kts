@@ -3,13 +3,9 @@ plugins {
 }
 
 dependencies {
-	api(testLibs.atrium.specs) {
-		exclude(group = "org.spekframework.spek2")
-		exclude(group = "ch.tutteli.spek")
-	}
 	api(gradleTestKit())
 	api(testLibs.kotest.runner.junit5)
+	api(testLibs.atrium.fluent.en.gb)
 
 	implementation(project(":translations:en"))
-	implementation(testLibs.atrium.fluent.en.gb)
 }
