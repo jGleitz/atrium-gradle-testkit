@@ -1,4 +1,41 @@
+# Release rules for the pinned tooling in .github/release (see its package.json).
+# The analyzer and the notes generator must use the same preset, so that both parse commits the same way as the
+# pull request title check (.github/workflows/pull-request-title.yml).
+branches:
+  - main
+tagFormat: v${version}
 plugins:
-  - '@semantic-release/commit-analyzer'
-  - '@semantic-release/github'
-  - '@semantic-release/release-notes-generator'
+  - - '@semantic-release/commit-analyzer'
+    - preset: conventionalcommits
+      releaseRules:
+        # Only the rules below release. This first rule matches every commit and disables the analyzer's built-in
+        # fallback rules, which would release commit types that the pull request title check rejects (e.g. `FIX:`).
+        - release: false
+        - breaking: true
+          release: major
+        - type: feat
+          release: minor
+        - type: fix
+          release: patch
+        # production dependency updates (Renovate: fix(deps)) release a patch
+        - type: fix
+          scope: deps
+          release: patch
+        - type: perf
+          release: patch
+  - - '@semantic-release/release-notes-generator'
+    - preset: conventionalcommits
+  - - '@semantic-release/exec'
+    - prepareCmd: >-
+        ./gradlew build --console=plain
+        -Pversion=${nextRelease.version}
+        -PreleaseTag=v${nextRelease.version}
+      publishCmd: >-
+        ./gradlew publishAndReleaseToMavenCentral publishAllPublicationsToGithubPackagesRepository --console=plain
+        -Pversion=${nextRelease.version}
+        -PreleaseTag=v${nextRelease.version}
+        -PremotePublicationApproved=true
+  - - '@semantic-release/github'
+    - successComment: false
+      failComment: false
+      releasedLabels: false

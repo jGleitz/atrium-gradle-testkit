@@ -1,0 +1,21 @@
+{
+  "name": "atrium-gradle-testkit-release",
+  "private": true,
+  "description": "Pinned semantic-release tooling and release-rule tests for atrium-gradle-testkit. Not published.",
+  "type": "module",
+  "engines": {
+    "node": ">=24.10.0"
+  },
+  "scripts": {
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "//": "conventional-changelog-conventionalcommits stays on 9.x: release-notes-generator 14.1.1 requires conventional-changelog-writer ^8, which preset 10 rejects; 9.x is also the preset major of the pull request title check.",
+  "devDependencies": {
+    "@semantic-release/commit-analyzer": "13.0.1",
+    "@semantic-release/exec": "7.1.0",
+    "@semantic-release/github": "12.0.10",
+    "@semantic-release/release-notes-generator": "14.1.1",
+    "conventional-changelog-conventionalcommits": "9.3.1",
+    "semantic-release": "25.0.9"
+  }
+}
