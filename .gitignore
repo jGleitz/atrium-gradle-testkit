@@ -2,6 +2,9 @@
 build/
 .gradle/
 
+### Release tooling
+/.github/release/node_modules/
+
 ### IntelliJ
 /.idea/
 .kotlin/
