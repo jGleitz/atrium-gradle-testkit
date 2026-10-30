@@ -7,5 +7,5 @@ atriumGradleTestkitModule {
 }
 
 dependencies {
-	api(libs.atrium.core.api)
+	api(libs.atrium.core)
 }
