@@ -93,7 +93,7 @@ abstract class BuildResultAssertionsSpec(
 		test("fails if the assertionCreator does not create an assertion") {
 			expect {
 				expect(loggingTaskResult).outputWithCreator { }
-			}.toThrow<AssertionError>().messageToContain("${OUTPUT.getDefault()}:", "at least one assertion defined")
+			}.toThrow<AssertionError>().messageToContain("${OUTPUT.getDefault()}:", "at least one expectation defined")
 		}
 	}
 
