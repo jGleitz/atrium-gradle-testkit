@@ -1,4 +1,4 @@
-import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.verbs.expect
 import de.joshuagleitze.test.gradle.output
 import de.joshuagleitze.test.gradle.task
@@ -79,7 +79,7 @@ class KotlinPluginSpec : FunSpec({
             expect(runResult) {
                 task(":compileKotlin").wasSuccessful()
                 task(":classes").wasInvoked()
-                output.contains("Hello World!")
+                output.toContain("Hello World!")
             }
         }
     }

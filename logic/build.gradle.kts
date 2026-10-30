@@ -8,7 +8,7 @@ atriumGradleTestkitModule {
 
 dependencies {
 	api(gradleTestKit())
-	api(libs.atrium.core.api)
+	api(libs.atrium.core)
 	api(libs.atrium.logic)
 
 	implementation(project(":translations:en"))

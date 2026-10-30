@@ -1,10 +1,10 @@
 package de.joshuagleitze.test.gradle
 
-import ch.tutteli.atrium.api.fluent.en_GB.all
-import ch.tutteli.atrium.api.fluent.en_GB.contains
 import ch.tutteli.atrium.api.fluent.en_GB.feature
 import ch.tutteli.atrium.api.fluent.en_GB.notToThrow
-import ch.tutteli.atrium.api.fluent.en_GB.toBe
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
+import ch.tutteli.atrium.api.fluent.en_GB.toEqual
+import ch.tutteli.atrium.api.fluent.en_GB.toHaveElementsAndAll
 import ch.tutteli.atrium.api.verbs.expect
 import ch.tutteli.atrium.assertions.Assertion
 import ch.tutteli.atrium.assertions.AssertionGroup
@@ -55,7 +55,7 @@ private fun newAssertionContainer(): Expect<Double> = RootExpectBuilder.forSubje
  */
 internal fun <T> collectAssertionsWithoutSubject(createAssertion: Expect<T>.() -> Unit): List<Assertion> =
 	CollectingExpect<T>(None, newAssertionContainer()._logic.components)
-		.addAssertionsCreatedBy(createAssertion)
+		.appendAsGroup(createAssertion)
 		.getAssertions()
 
 /**
@@ -69,7 +69,7 @@ internal fun reportInExplanatoryGroup(assertions: List<Assertion>): String {
 		.withDefaultType
 		.withAssertions(assertions)
 		.build()
-	container.addAssertion(explanatoryGroup)
+	container._logic.append(explanatoryGroup)
 	val report = StringBuilder()
 	container._logic.components.build<Reporter>().format(explanatoryGroup, report)
 	return report.toString()
@@ -99,11 +99,11 @@ internal fun <T> FunSpec.registerSubjectLessTests(cases: List<SubjectLessCase<T>
 				val assertions = collectAssertionsWithoutSubject(createAssertion)
 				var report = ""
 				expect { report = reportInExplanatoryGroup(assertions) }.notToThrow()
-				reportFragments.forEach { fragment -> expect(report).contains(fragment) }
+				reportFragments.forEach { fragment -> expect(report).toContain(fragment) }
 			}
 
 			test("`$name` does not hold") {
-				expect(collectAssertionsWithoutSubject(createAssertion)).all { feature(Assertion::holds).toBe(false) }
+				expect(collectAssertionsWithoutSubject(createAssertion)).toHaveElementsAndAll { feature(Assertion::holds).toEqual(false) }
 			}
 		}
 	}

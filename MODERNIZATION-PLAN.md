@@ -30,7 +30,8 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 3. Make real task-outcome fixtures deterministic | **done** - merged in #190 (`a12688f`); evidence in `3/` |
 | 4. Remove Atrium test-helper coupling under Kotest | **in progress** - PR #193 awaiting merge; evidence in `4/` |
 | 5. Add metadata-only conventional PR title validation | **done** - merged in #188 (`5713c01`); evidence in `5/` |
-| 6-21 | not started |
+| 6. Migrate Atrium dependency cohort to 0.17 | **in progress** - commit `build: migrate Atrium to 0.17` awaiting review/merge; evidence in `6/` |
+| 7-21 | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 

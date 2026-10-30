@@ -5,7 +5,7 @@ plugins {
 }
 
 val githubRepository = providers.gradleProperty("github.repository")
-val atriumVersion = versionCatalogs.named("libs").findLibrary("atrium-core-api").get().get().version
+val atriumVersion = versionCatalogs.named("libs").findLibrary("atrium-core").get().get().version
 
 dokka {
 	val gitRef = if (status == "release") "v$version" else "main"
