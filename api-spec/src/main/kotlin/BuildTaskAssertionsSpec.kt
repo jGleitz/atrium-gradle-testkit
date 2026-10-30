@@ -6,14 +6,8 @@ import ch.tutteli.atrium.api.fluent.en_GB.notToThrow
 import ch.tutteli.atrium.api.fluent.en_GB.toThrow
 import ch.tutteli.atrium.api.verbs.expect
 import ch.tutteli.atrium.creating.Expect
-import ch.tutteli.atrium.specs.Feature0
-import ch.tutteli.atrium.specs.Fun1
-import ch.tutteli.atrium.specs.forSubjectLess
-import ch.tutteli.atrium.specs.lambda
-import ch.tutteli.atrium.specs.name
-import ch.tutteli.atrium.specs.unifySignatures
-import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.INVOKED
+import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.OUTCOME
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS_NOT
 import io.kotest.core.spec.style.FunSpec
@@ -29,16 +23,20 @@ import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
 import java.nio.file.Files
 import java.nio.file.Path
 
+/**
+ * The behaviour every API must provide for assertions on a [BuildTask]. Concrete API modules provide their
+ * assertion functions as lambdas.
+ */
 abstract class BuildTaskAssertionsSpec(
-	wasInvokedFeature: Feature0<BuildTask?, BuildTask>,
-	wasInvokedFun: Fun1<BuildTask?, Expect<BuildTask>.() -> Unit>,
-	wasNotInvoked: Feature0<BuildTask?, Unit>,
-	wasSuccessful: Feature0<BuildTask?, BuildTask>,
-	failed: Feature0<BuildTask?, BuildTask>,
-	wasUpToDate: Feature0<BuildTask?, BuildTask>,
-	wasSkipped: Feature0<BuildTask?, BuildTask>,
-	usedCachedResult: Feature0<BuildTask?, BuildTask>,
-	hadNoSource: Feature0<BuildTask?, BuildTask>
+	wasInvokedFeature: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	wasInvokedWithCreator: Expect<BuildTask?>.(Expect<BuildTask>.() -> Unit) -> Expect<BuildTask?>,
+	wasNotInvoked: Expect<BuildTask?>.() -> Expect<Unit>,
+	wasSuccessful: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	failed: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	wasUpToDate: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	wasSkipped: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	usedCachedResult: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	hadNoSource: Expect<BuildTask?>.() -> Expect<BuildTask>
 ): FunSpec({
 	val fixtures = TemporaryFixtures(this, "atrium-gradle-testkit-build-task-")
 	val outcomeRuns = mutableMapOf<TaskOutcome, BuildResult>()
@@ -55,94 +53,120 @@ abstract class BuildTaskAssertionsSpec(
 		fixtures.setupCompleted()
 	}
 
-	registerSubjectLessSpec<BuildTask?>(
-		"",
-		wasInvokedFeature.forSubjectLess(),
-		wasInvokedFun.forSubjectLess { isA<BuildTask>() },
-		wasNotInvoked.forSubjectLess(),
-		wasSuccessful.forSubjectLess(),
-		failed.forSubjectLess(),
-		wasUpToDate.forSubjectLess(),
-		wasSkipped.forSubjectLess(),
-		usedCachedResult.forSubjectLess(),
-		hadNoSource.forSubjectLess()
+	val wasInvokedFragments = listOf("${WAS.getDefault()}:", INVOKED.getDefault())
+	fun outcomeFragments(outcome: TaskOutcome) = wasInvokedFragments + listOf("${OUTCOME.getDefault()}:", outcome.name)
+
+	registerSubjectLessTests(
+		listOf(
+			SubjectLessCase<BuildTask?>("wasInvoked", wasInvokedFragments) { wasInvokedFeature() },
+			SubjectLessCase<BuildTask?>("wasInvoked { }", wasInvokedFragments) {
+				wasInvokedWithCreator { isA<BuildTask>() }
+			},
+			SubjectLessCase<BuildTask?>(
+				"wasNotInvoked",
+				listOf("${WAS_NOT.getDefault()}:", INVOKED.getDefault())
+			) { wasNotInvoked() },
+			SubjectLessCase<BuildTask?>("wasSuccessful", outcomeFragments(SUCCESS)) { wasSuccessful() },
+			SubjectLessCase<BuildTask?>("failed", outcomeFragments(FAILED)) { failed() },
+			SubjectLessCase<BuildTask?>("wasUpToDate", outcomeFragments(UP_TO_DATE)) { wasUpToDate() },
+			SubjectLessCase<BuildTask?>("wasSkipped", outcomeFragments(SKIPPED)) { wasSkipped() },
+			SubjectLessCase<BuildTask?>("usedCachedResult", outcomeFragments(FROM_CACHE)) { usedCachedResult() },
+			SubjectLessCase<BuildTask?>("hadNoSource", outcomeFragments(NO_SOURCE)) { hadNoSource() }
+		)
 	)
 
-	unifySignatures(wasInvokedFeature, wasInvokedFun).forEach { (name, wasInvokedLambda, _) ->
+	/** Both overloads of the `wasInvoked` assertion, reduced to “assert that the task was invoked”. */
+	data class InvokedOverload(val name: String, val assertWasInvoked: Expect<BuildTask?>.() -> Unit)
+
+	val invokedOverloads = listOf(
+		InvokedOverload("wasInvoked") { wasInvokedFeature().isA<BuildTask>() },
+		InvokedOverload("wasInvoked { }") { wasInvokedWithCreator { isA<BuildTask>() } }
+	)
+
+	invokedOverloads.forEach { (name, assertWasInvoked) ->
 		context(name) {
 			test("succeeds if the task was invoked directly") {
 				expect {
-					expect(successRun.task(":clean")).wasInvokedLambda { isA<BuildTask>() }
+					expect(successRun.task(":clean")).assertWasInvoked()
 				}.notToThrow()
 			}
 
 			test("succeeds if the task was invoked transitively") {
 				expect {
-					expect(successRun.task(":successTask")).wasInvokedLambda { isA<BuildTask>() }
+					expect(successRun.task(":successTask")).assertWasInvoked()
 				}.notToThrow()
 			}
 
 			test("fails if the task was not invoked") {
 				expect {
-					expect(successRun.task(":iDontExist")).wasInvokedLambda { isA<BuildTask>() }
+					expect(successRun.task(":iDontExist")).assertWasInvoked()
 				}.toThrow<AssertionError>().messageContains(WAS.getDefault(), INVOKED.getDefault())
 			}
 		}
 	}
 
-	context(wasNotInvoked.name) {
-		val wasNotInvokedLambda = wasNotInvoked.lambda
+	context("wasInvoked { }") {
+		test("fails if the assertionCreator does not create an assertion") {
+			expect {
+				expect(successRun.task(":clean")).wasInvokedWithCreator { }
+			}.toThrow<AssertionError>().messageContains("at least one assertion defined")
+		}
+	}
 
+	context("wasNotInvoked") {
 		test("fails if the task was invoked directly") {
 			expect {
-				expect(successRun.task(":clean")).wasNotInvokedLambda()
+				expect(successRun.task(":clean")).wasNotInvoked()
 			}.toThrow<AssertionError>().messageContains(WAS_NOT.getDefault(), INVOKED.getDefault())
 		}
 
 		test("fails if the task was invoked transitively") {
 			expect {
-				expect(successRun.task(":successTask")).wasNotInvokedLambda()
+				expect(successRun.task(":successTask")).wasNotInvoked()
 			}.toThrow<AssertionError>().messageContains(WAS_NOT.getDefault(), INVOKED.getDefault())
 		}
 
 		test("succeeds if the task was not invoked") {
 			expect {
-				expect(successRun.task(":iDontExist")).wasNotInvokedLambda()
+				expect(successRun.task(":iDontExist")).wasNotInvoked()
 			}.notToThrow()
 		}
 	}
 
-	data class OutcomeCheck(val feature: Feature0<BuildTask?, BuildTask>, val outcome: TaskOutcome, val task: String)
+	data class OutcomeCheck(
+		val name: String,
+		val assertOutcome: Expect<BuildTask?>.() -> Unit,
+		val outcome: TaskOutcome,
+		val task: String
+	)
 
 	val outcomeChecks = listOf(
-		OutcomeCheck(wasSuccessful, outcome = SUCCESS, task = ":successTask"),
-		OutcomeCheck(failed, outcome = FAILED, task = ":failureTask"),
-		OutcomeCheck(wasUpToDate, outcome = UP_TO_DATE, task = ":upToDateTask"),
-		OutcomeCheck(wasSkipped, outcome = SKIPPED, task = ":skippedTask"),
-		OutcomeCheck(usedCachedResult, outcome = FROM_CACHE, ":cachedTask"),
-		OutcomeCheck(hadNoSource, outcome = NO_SOURCE, ":noSourceTask")
+		OutcomeCheck("wasSuccessful", { wasSuccessful() }, outcome = SUCCESS, task = ":successTask"),
+		OutcomeCheck("failed", { failed() }, outcome = FAILED, task = ":failureTask"),
+		OutcomeCheck("wasUpToDate", { wasUpToDate() }, outcome = UP_TO_DATE, task = ":upToDateTask"),
+		OutcomeCheck("wasSkipped", { wasSkipped() }, outcome = SKIPPED, task = ":skippedTask"),
+		OutcomeCheck("usedCachedResult", { usedCachedResult() }, outcome = FROM_CACHE, task = ":cachedTask"),
+		OutcomeCheck("hadNoSource", { hadNoSource() }, outcome = NO_SOURCE, task = ":noSourceTask")
 	)
-	outcomeChecks.forEach { (feature, outcome, task) ->
-		val featureFun = feature.lambda
-
-		context(feature.name) {
+	outcomeChecks.forEach { (name, assertOutcome, outcome, task) ->
+		context(name) {
 			test("succeeds if the outcome is $outcome") {
 				expect {
-					expect(outcomeRuns.getValue(outcome).task(task)).featureFun()
+					expect(outcomeRuns.getValue(outcome).task(task)).assertOutcome()
 				}.notToThrow()
 			}
 
-			outcomeChecks.filter { it.outcome != outcome }.forEach { (_, otherOutcome, otherTask) ->
-				test("fails if the outcome is $otherOutcome") {
+			outcomeChecks.filter { it.outcome != outcome }.forEach { otherCheck ->
+				test("fails if the outcome is ${otherCheck.outcome}") {
 					expect {
-						expect(outcomeRuns.getValue(otherOutcome).task(otherTask)).featureFun()
-					}.toThrow<AssertionError>().messageContains(outcome.name, otherOutcome.name)
+						expect(outcomeRuns.getValue(otherCheck.outcome).task(otherCheck.task)).assertOutcome()
+					}.toThrow<AssertionError>().messageContains(outcome.name, otherCheck.outcome.name)
 				}
 			}
 
 			test("fails if the task was not invoked") {
 				expect {
-					expect(successRun.task("iDontExist")).featureFun()
+					expect(successRun.task("iDontExist")).assertOutcome()
 				}.toThrow<AssertionError>().messageContains(outcome.name, WAS.getDefault(), INVOKED.getDefault())
 			}
 		}
