@@ -6,6 +6,6 @@ import de.joshuagleitze.test.gradle.translation.en.BuildResultAssertions.OUTPUT
 import de.joshuagleitze.test.gradle.translation.en.BuildResultAssertions.TASK
 import org.gradle.testkit.runner.BuildResult
 
-fun AssertionContainer<BuildResult>.output() = manualFeature(OUTPUT) { output }
+fun <T : BuildResult> AssertionContainer<T>.output() = manualFeature(OUTPUT, BuildResult::getOutput)
 
-fun AssertionContainer<BuildResult>.task(path: String) = manualFeature("$TASK '$path'") { task(path) }
+fun <T : BuildResult> AssertionContainer<T>.task(path: String) = manualFeature("$TASK '$path'") { task(path) }

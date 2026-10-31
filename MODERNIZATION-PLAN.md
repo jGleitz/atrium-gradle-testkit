@@ -34,7 +34,8 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 7. Migrate Atrium cohort to JVM-11-era 0.18 | **in progress** - commit `build: migrate Atrium to 0.18` awaiting review/merge; evidence in `7/` |
 | 8. Migrate Atrium cohort across the 1.0 boundary | **in progress** - commit `build: migrate Atrium to 1.0` awaiting review/merge; evidence in `8/` |
 | 9. Complete migration to stable Atrium 1.3 | **in progress** - commit `build: migrate Atrium to 1.3` awaiting review/merge; evidence in `9/` |
-| 10-21 | not started |
+| 10. Introduce the clean idiomatic v2 expectation API | **in progress** - verified locally; commit `feat!: adopt idiomatic Atrium expectation API` awaiting review/merge; evidence in `10/` |
+| 11-21 | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 

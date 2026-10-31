@@ -44,9 +44,9 @@ class KotlinPluginSpec: FunSpec({
 				.build()
 
 			expect(runResult) {
-				task(":compileKotlin").wasSuccessful()
-				task(":classes").wasInvoked()
-				output.contains("Hello World!")
+				task(":compileKotlin").toBeSuccessful()
+				task(":classes").toBeInvoked()
+				output.toContain("Hello World!")
 			}
 		}
 	}

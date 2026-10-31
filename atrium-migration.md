@@ -17,6 +17,15 @@ carry Kotlin metadata 1.4.3 and Java 11 bytecode. These do not raise this projec
 targets. Evidence, tagged 1.1/1.2/1.3 sources and release notes are in the control checkout's
 `.omo/evidence/major-release-modernization/9/`.
 
+**Verified package-10 checkpoint (2026-10-31).** The public API now follows the 1.x conventions, without deprecated
+aliases: `wasInvoked` became `toBeInvoked`, `wasNotInvoked` became `notToBeInvoked`, `wasSuccessful` became
+`toBeSuccessful`, `failed` became `toHaveFailed`, `wasUpToDate` became `toBeUpToDate`, `wasSkipped` became
+`toBeSkipped`, `usedCachedResult` became `toHaveBeenLoadedFromCache` and `hadNoSource` became `toHaveNoSource`. New are
+the generic `toHaveOutcome(TaskOutcome)` and the creator overload `task(path) { }`. All operations take a generic
+receiver (`<T : BuildResult>`, or `<T : BuildTask?>` with the definitely non-null `T & Any` after narrowing). The
+reported descriptions (`output`, `task '<path>'`, `was`/`was not` `invoked`, `outcome`) are unchanged. The callable
+reference compiler workaround `-Xno-optimized-callable-references` was removed; see the package-10 evidence.
+
 ### 1. What changed between 0.16 and 1.3 (relevant to extension authors)
 
 | Release | Change affecting extensions |
@@ -44,7 +53,7 @@ targets. Evidence, tagged 1.1/1.2/1.3 sources and release notes are in the contr
 
 ### 2. API design conventions for expectation functions (fluent API)
 
-- **Naming:** use the `to + infinitive` schema (0.17), e.g. `toEqual`, `toBeLessThan`, `toContain`, `toHaveSize`, `toHaveElementsAndAll`, `notToContain`, `notToEqualNull`.\[2\]\[12\] For TestKit this means `wasSuccessful()`/`wasInvoked()`-style names should become something like `toHaveOutcome`, `toBeSuccessful` and `toHaveTask`. You can keep the old names as `@Deprecated(ReplaceWith(...))` aliases, which is the same mechanism Atrium uses for its own migrations.\[8\]
+- **Naming:** use the `to + infinitive` schema (0.17), e.g. `toEqual`, `toBeLessThan`, `toContain`, `toHaveSize`, `toHaveElementsAndAll`, `notToContain`, `notToEqualNull`.\[2\]\[12\] For TestKit this means `wasSuccessful()`/`wasInvoked()`-style names become `toHaveOutcome`, `toBeSuccessful` and `toBeInvoked`. Atrium keeps old names as `@Deprecated(ReplaceWith(...))` aliases for its own migrations;\[8\] this project's major release replaces them outright instead (see the package-10 checkpoint above).
 - **Feature-extractor naming:** shortcut properties are named after the feature, without the `get` prefix: `message`, `first`, `second`, `keys`, `values`, `size`. Safe-extraction functions are named after the operation (`get(index)`, `getExisting(key)`).\[4\]\[10\]
 - **Overload pairs:** feature extractors and narrowing functions always come in two overloads. One takes an `assertionCreator` lambda and returns the *original* `Expect<T>`. The other takes the same parameters minus the lambda and returns `Expect<R>`, changing the subject.\[4\]\[8\]\[13\] The README's composition example is the template:\[4\]
   ```kotlin
@@ -122,11 +131,9 @@ fun <T : BuildTask> Expect<T>.toHaveOutcome(expected: TaskOutcome): Expect<T> =
 fun <T : BuildTask> Expect<T>.toBeSuccessful(): Expect<T> =
     _logic.createAndAppend("to be", Text("successful")) { it.outcome == TaskOutcome.SUCCESS }
 
-@Deprecated("Use toBeSuccessful", ReplaceWith("toBeSuccessful()"))
-fun <T : BuildTask> Expect<T>.wasSuccessful(): Expect<T> = toBeSuccessful()
 ```
 
-This is the README's own pattern: `_logic.createAndAppend(description: String, representation, test)` "creates and appends the expectation" and returns `Expect<T>`.\[8\] `Text` is used "so that `"an even number"` is not treated as a `String` in reporting".\[4\] If you prefer to stay entirely on the API level, you can also compose existing functions: `feature(BuildTask::getOutcome) { toEqual(TaskOutcome.SUCCESS) }`.
+This project does not ship such aliases, and its `toHaveOutcome` keeps the existing `outcome` feature description instead of `to have outcome`. This is the README's own pattern: `_logic.createAndAppend(description: String, representation, test)` "creates and appends the expectation" and returns `Expect<T>`.\[8\] `Text` is used "so that `"an even number"` is not treated as a `String` in reporting".\[4\] If you prefer to stay entirely on the API level, you can also compose existing functions: `feature(BuildTask::getOutcome) { toEqual(TaskOutcome.SUCCESS) }`.
 
 ### (b) Feature extraction with both overloads
 
@@ -207,12 +214,12 @@ class BuildTaskExpectationsTest {
 
     @Test fun toHaveOutcome_fails_and_reports() {
         expect { expect(fakeTask(FAILED)).toHaveOutcome(SUCCESS) }
-            .toThrow<AssertionError> { messageToContain("to have outcome", "SUCCESS") }
+            .toThrow<AssertionError> { messageToContain("outcome:", "SUCCESS") }
     }
 
     @Test fun lambdaOverload_reportsSubExpectations_whenTaskMissing() {
         expect { expect(fakeResult()).task(":missing") { toBeSuccessful() } }
-            .toThrow<AssertionError> { messageToContain("task :missing", "to be", "successful") }
+            .toThrow<AssertionError> { messageToContain("task ':missing': null", "was", "invoked", "outcome", "SUCCESS") }
     }
 }
 ```

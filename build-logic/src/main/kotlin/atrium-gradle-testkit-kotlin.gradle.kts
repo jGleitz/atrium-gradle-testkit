@@ -31,9 +31,6 @@ kotlin {
 		languageVersion = kotlinReleaseVersion
 		apiVersion = kotlinReleaseVersion
 		jvmTarget = javaReleaseVersion.map { JvmTarget.fromTarget(it.toString()) }
-
-		// TODO workaround for https://youtrack.jetbrains.com/issue/KT-41142
-		freeCompilerArgs.add("-Xno-optimized-callable-references")
 	}
 }
 

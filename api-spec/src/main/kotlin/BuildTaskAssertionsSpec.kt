@@ -26,15 +26,16 @@ import java.nio.file.Path
  * assertion functions as lambdas.
  */
 abstract class BuildTaskAssertionsSpec(
-	wasInvokedFeature: Expect<BuildTask?>.() -> Expect<BuildTask>,
-	wasInvokedWithCreator: Expect<BuildTask?>.(Expect<BuildTask>.() -> Unit) -> Expect<BuildTask?>,
-	wasNotInvoked: Expect<BuildTask?>.() -> Expect<Unit>,
-	wasSuccessful: Expect<BuildTask?>.() -> Expect<BuildTask>,
-	failed: Expect<BuildTask?>.() -> Expect<BuildTask>,
-	wasUpToDate: Expect<BuildTask?>.() -> Expect<BuildTask>,
-	wasSkipped: Expect<BuildTask?>.() -> Expect<BuildTask>,
-	usedCachedResult: Expect<BuildTask?>.() -> Expect<BuildTask>,
-	hadNoSource: Expect<BuildTask?>.() -> Expect<BuildTask>
+	toBeInvokedFeature: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	toBeInvokedWithCreator: Expect<BuildTask?>.(Expect<BuildTask>.() -> Unit) -> Expect<BuildTask?>,
+	notToBeInvoked: Expect<BuildTask?>.() -> Expect<Unit>,
+	toHaveOutcome: Expect<BuildTask?>.(TaskOutcome) -> Expect<BuildTask>,
+	toBeSuccessful: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	toHaveFailed: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	toBeUpToDate: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	toBeSkipped: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	toHaveBeenLoadedFromCache: Expect<BuildTask?>.() -> Expect<BuildTask>,
+	toHaveNoSource: Expect<BuildTask?>.() -> Expect<BuildTask>
 ): FunSpec({
 	val fixtures = TemporaryFixtures(this, "atrium-gradle-testkit-build-task-")
 	val outcomeRuns = mutableMapOf<TaskOutcome, BuildResult>()
@@ -51,68 +52,69 @@ abstract class BuildTaskAssertionsSpec(
 		fixtures.setupCompleted()
 	}
 
-	val wasInvokedFragments = listOf("was:", "invoked")
-	fun outcomeFragments(outcome: TaskOutcome) = wasInvokedFragments + listOf("outcome:", outcome.name)
+	val toBeInvokedFragments = listOf("was:", "invoked")
+	fun outcomeFragments(outcome: TaskOutcome) = toBeInvokedFragments + listOf("outcome:", outcome.name)
 
 	registerSubjectLessTests(
 		listOf(
-			SubjectLessCase<BuildTask?>("wasInvoked", wasInvokedFragments) { wasInvokedFeature() },
-			SubjectLessCase<BuildTask?>("wasInvoked { }", wasInvokedFragments) {
-				wasInvokedWithCreator { toBeAnInstanceOf<BuildTask>() }
+			SubjectLessCase<BuildTask?>("toBeInvoked", toBeInvokedFragments) { toBeInvokedFeature() },
+			SubjectLessCase<BuildTask?>("toBeInvoked { }", toBeInvokedFragments) {
+				toBeInvokedWithCreator { toBeAnInstanceOf<BuildTask>() }
 			},
 			SubjectLessCase<BuildTask?>(
-				"wasNotInvoked",
+				"notToBeInvoked",
 				listOf("was not:", "invoked")
-			) { wasNotInvoked() },
-			SubjectLessCase<BuildTask?>("wasSuccessful", outcomeFragments(SUCCESS)) { wasSuccessful() },
-			SubjectLessCase<BuildTask?>("failed", outcomeFragments(FAILED)) { failed() },
-			SubjectLessCase<BuildTask?>("wasUpToDate", outcomeFragments(UP_TO_DATE)) { wasUpToDate() },
-			SubjectLessCase<BuildTask?>("wasSkipped", outcomeFragments(SKIPPED)) { wasSkipped() },
-			SubjectLessCase<BuildTask?>("usedCachedResult", outcomeFragments(FROM_CACHE)) { usedCachedResult() },
-			SubjectLessCase<BuildTask?>("hadNoSource", outcomeFragments(NO_SOURCE)) { hadNoSource() }
+			) { notToBeInvoked() },
+			SubjectLessCase<BuildTask?>("toBeSuccessful", outcomeFragments(SUCCESS)) { toBeSuccessful() },
+			SubjectLessCase<BuildTask?>("toHaveFailed", outcomeFragments(FAILED)) { toHaveFailed() },
+			SubjectLessCase<BuildTask?>("toBeUpToDate", outcomeFragments(UP_TO_DATE)) { toBeUpToDate() },
+			SubjectLessCase<BuildTask?>("toBeSkipped", outcomeFragments(SKIPPED)) { toBeSkipped() },
+			SubjectLessCase<BuildTask?>("toHaveBeenLoadedFromCache", outcomeFragments(FROM_CACHE)) { toHaveBeenLoadedFromCache() },
+			SubjectLessCase<BuildTask?>("toHaveNoSource", outcomeFragments(NO_SOURCE)) { toHaveNoSource() },
+			SubjectLessCase<BuildTask?>("toHaveOutcome", outcomeFragments(UP_TO_DATE)) { toHaveOutcome(UP_TO_DATE) }
 		)
 	)
 
-	/** Both overloads of the `wasInvoked` assertion, reduced to “assert that the task was invoked”. */
-	data class InvokedOverload(val name: String, val assertWasInvoked: Expect<BuildTask?>.() -> Unit)
+	/** Both overloads of the `toBeInvoked` assertion, reduced to “assert that the task was invoked”. */
+	data class InvokedOverload(val name: String, val assertToBeInvoked: Expect<BuildTask?>.() -> Unit)
 
 	val invokedOverloads = listOf(
-		InvokedOverload("wasInvoked") { wasInvokedFeature().toBeAnInstanceOf<BuildTask>() },
-		InvokedOverload("wasInvoked { }") { wasInvokedWithCreator { toBeAnInstanceOf<BuildTask>() } }
+		InvokedOverload("toBeInvoked") { toBeInvokedFeature().toBeAnInstanceOf<BuildTask>() },
+		InvokedOverload("toBeInvoked { }") { toBeInvokedWithCreator { toBeAnInstanceOf<BuildTask>() } }
 	)
 
-	invokedOverloads.forEach { (name, assertWasInvoked) ->
+	invokedOverloads.forEach { (name, assertToBeInvoked) ->
 		context(name) {
 			test("succeeds if the task was invoked directly") {
 				expect {
-					expect(successRun.task(":clean")).assertWasInvoked()
+					expect(successRun.task(":clean")).assertToBeInvoked()
 				}.notToThrow()
 			}
 
 			test("succeeds if the task was invoked transitively") {
 				expect {
-					expect(successRun.task(":successTask")).assertWasInvoked()
+					expect(successRun.task(":successTask")).assertToBeInvoked()
 				}.notToThrow()
 			}
 
 			test("fails if the task was not invoked") {
 				expect {
-					expect(successRun.task(":iDontExist")).assertWasInvoked()
+					expect(successRun.task(":iDontExist")).assertToBeInvoked()
 				}.toThrow<AssertionError>().messageToContain("was", "invoked")
 			}
 		}
 	}
 
-	context("wasInvoked { }") {
+	context("invocation creator validation and grouping") {
 		test("fails if the assertionCreator does not create an assertion") {
 			expect {
-				expect(successRun.task(":clean")).wasInvokedWithCreator { }
+				expect(successRun.task(":clean")).toBeInvokedWithCreator { }
 			}.toThrow<AssertionError>().messageToContain("at least one expectation defined")
 		}
 
 		test("reports nested outcome and path expectations together") {
 			expect {
-				expect(successRun.task(":successTask")).wasInvokedWithCreator {
+				expect(successRun.task(":successTask")).toBeInvokedWithCreator {
 					feature(BuildTask::getOutcome).toEqual(FAILED)
 					feature(BuildTask::getPath).toEqual(":notTheTask")
 				}
@@ -122,22 +124,22 @@ abstract class BuildTaskAssertionsSpec(
 		}
 	}
 
-	context("wasNotInvoked") {
+	context("notToBeInvoked") {
 		test("fails if the task was invoked directly") {
 			expect {
-				expect(successRun.task(":clean")).wasNotInvoked()
+				expect(successRun.task(":clean")).notToBeInvoked()
 			}.toThrow<AssertionError>().messageToContain("was not", "invoked")
 		}
 
 		test("fails if the task was invoked transitively") {
 			expect {
-				expect(successRun.task(":successTask")).wasNotInvoked()
+				expect(successRun.task(":successTask")).notToBeInvoked()
 			}.toThrow<AssertionError>().messageToContain("was not", "invoked")
 		}
 
 		test("succeeds if the task was not invoked") {
 			expect {
-				expect(successRun.task(":iDontExist")).wasNotInvoked()
+				expect(successRun.task(":iDontExist")).notToBeInvoked()
 			}.notToThrow()
 		}
 	}
@@ -150,14 +152,18 @@ abstract class BuildTaskAssertionsSpec(
 	)
 
 	val outcomeChecks = listOf(
-		OutcomeCheck("wasSuccessful", { wasSuccessful() }, outcome = SUCCESS, task = ":successTask"),
-		OutcomeCheck("failed", { failed() }, outcome = FAILED, task = ":failureTask"),
-		OutcomeCheck("wasUpToDate", { wasUpToDate() }, outcome = UP_TO_DATE, task = ":upToDateTask"),
-		OutcomeCheck("wasSkipped", { wasSkipped() }, outcome = SKIPPED, task = ":skippedTask"),
-		OutcomeCheck("usedCachedResult", { usedCachedResult() }, outcome = FROM_CACHE, task = ":cachedTask"),
-		OutcomeCheck("hadNoSource", { hadNoSource() }, outcome = NO_SOURCE, task = ":noSourceTask")
+		OutcomeCheck("toBeSuccessful", { toBeSuccessful() }, outcome = SUCCESS, task = ":successTask"),
+		OutcomeCheck("toHaveFailed", { toHaveFailed() }, outcome = FAILED, task = ":failureTask"),
+		OutcomeCheck("toBeUpToDate", { toBeUpToDate() }, outcome = UP_TO_DATE, task = ":upToDateTask"),
+		OutcomeCheck("toBeSkipped", { toBeSkipped() }, outcome = SKIPPED, task = ":skippedTask"),
+		OutcomeCheck("toHaveBeenLoadedFromCache", { toHaveBeenLoadedFromCache() }, outcome = FROM_CACHE, task = ":cachedTask"),
+		OutcomeCheck("toHaveNoSource", { toHaveNoSource() }, outcome = NO_SOURCE, task = ":noSourceTask")
 	)
-	outcomeChecks.forEach { (name, assertOutcome, outcome, task) ->
+	// the generic outcome check is registered after the conveniences, so that their test order is unchanged
+	val genericOutcomeChecks = outcomeChecks.map { check ->
+		check.copy(name = "toHaveOutcome(${check.outcome})", assertOutcome = { toHaveOutcome(check.outcome) })
+	}
+	(outcomeChecks + genericOutcomeChecks).forEach { (name, assertOutcome, outcome, task) ->
 		context(name) {
 			test("succeeds if the outcome is $outcome") {
 				expect {
