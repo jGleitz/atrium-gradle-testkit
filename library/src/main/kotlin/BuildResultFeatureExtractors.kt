@@ -2,8 +2,8 @@ package de.joshuagleitze.test.gradle
 
 import ch.tutteli.atrium.creating.Expect
 import ch.tutteli.atrium.logic._logic
-import de.joshuagleitze.test.gradle.logic.output
-import de.joshuagleitze.test.gradle.logic.task
+import de.joshuagleitze.test.gradle.internal.output
+import de.joshuagleitze.test.gradle.internal.task
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.BuildTask
 
