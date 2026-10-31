@@ -9,12 +9,14 @@ atriumGradleTestkitModule {
 }
 
 dependencies {
-	api(gradleTestKit())
+	// TestKit belongs to the consumer's Gradle distribution, not this publication's runtime graph.
+	compileOnly(gradleTestKit())
 	api(libs.atrium.core)
 
 	implementation(libs.atrium.logic)
 
 	testImplementation(testLibs.atrium.fluent)
+	testImplementation(gradleTestKit())
 	testImplementation(testLibs.kotest.runner.junit5)
 }
 

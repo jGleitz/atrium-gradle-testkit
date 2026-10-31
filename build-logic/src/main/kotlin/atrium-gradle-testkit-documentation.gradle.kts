@@ -8,7 +8,7 @@ val githubRepository = providers.gradleProperty("github.repository")
 val atriumVersion = versionCatalogs.named("libs").findLibrary("atrium-core").get().get().version
 
 dokka {
-	val gitRef = if (status == "release") "v$version" else "main"
+	val gitRef = providers.gradleProperty("releaseTag").orElse("main").get()
 	val projectPath = projectDir.relativeTo(rootDir).invariantSeparatorsPath
 	val projectSourceUrl = githubRepository.map { java.net.URI("https://github.com/$it/blob/$gitRef/$projectPath") }
 
