@@ -1,8 +1,12 @@
-# atrium-gradle-testkit [![CI Status](https://github.com/jGleitz/atrium-gradle-testkit/workflows/CI/badge.svg)](https://github.com/jGleitz/atrium-gradle-testkit/actions) [![Maven Central Version](https://img.shields.io/maven-central/v/de.joshuagleitze/atrium-gradle-testkit-fluent-en?strategy=releaseProperty&logo=sonatype)](https://central.sonatype.com/artifact/de.joshuagleitze/atrium-gradle-testkit-fluent-en) 
+# atrium-gradle-testkit [![CI Status](https://github.com/jGleitz/atrium-gradle-testkit/workflows/CI/badge.svg)](https://github.com/jGleitz/atrium-gradle-testkit/actions) [![Maven Central Version](https://img.shields.io/maven-central/v/de.joshuagleitze/atrium-gradle-testkit?strategy=releaseProperty&logo=sonatype)](https://central.sonatype.com/artifact/de.joshuagleitze/atrium-gradle-testkit)
 
 [Atrium](https://github.com/robstoll/atrium) assertions to test [Gradle plugins with TestKit](https://docs.gradle.org/current/userguide/test_kit.html).
 
-[:point_right: **Documentation of all assertions**](https://jgleitz.github.io/atrium-gradle-testkit/apis/atrium-gradle-testkit-fluent-en/atrium-gradle-testkit-fluent-en/de.joshuagleitze.test.gradle/)
+[:point_right: **Documentation of all assertions**](https://jgleitz.github.io/atrium-gradle-testkit/atrium-gradle-testkit/de.joshuagleitze.test.gradle/)
+
+The v2 library uses the single coordinate `de.joshuagleitze:atrium-gradle-testkit`, replacing the
+`atrium-gradle-testkit-fluent-en`, `atrium-gradle-testkit-logic` and `atrium-gradle-testkit-translation-en` artifacts.
+The Kotlin package remains `de.joshuagleitze.test.gradle`.
 
 ## Example
 
