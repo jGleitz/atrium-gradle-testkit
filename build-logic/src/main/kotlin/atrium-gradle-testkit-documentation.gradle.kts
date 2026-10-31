@@ -24,7 +24,7 @@ dokka {
 			packageListUrl("https://docs.gradle.org/current/javadoc/element-list")
 		}
 		externalDocumentationLinks.register("atrium") {
-			url("https://docs.atriumlib.org/$atriumVersion/doc/")
+			url("https://docs.atriumlib.org/$atriumVersion/kdoc/")
 		}
 	}
 }

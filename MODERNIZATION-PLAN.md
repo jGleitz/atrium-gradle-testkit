@@ -32,7 +32,8 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 5. Add metadata-only conventional PR title validation | **done** - merged in #188 (`5713c01`); evidence in `5/` |
 | 6. Migrate Atrium dependency cohort to 0.17 | **in progress** - commit `build: migrate Atrium to 0.17` awaiting review/merge; evidence in `6/` |
 | 7. Migrate Atrium cohort to JVM-11-era 0.18 | **in progress** - commit `build: migrate Atrium to 0.18` awaiting review/merge; evidence in `7/` |
-| 8-21 | not started |
+| 8. Migrate Atrium cohort across the 1.0 boundary | **in progress** - commit `build: migrate Atrium to 1.0` awaiting review/merge; evidence in `8/` |
+| 9-21 | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 
