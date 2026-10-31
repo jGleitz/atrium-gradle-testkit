@@ -15,11 +15,11 @@ This file is the concise current index. The authoritative plan is the work plan 
 | Bytecode target | Java 21 (`javaReleaseVersion`, deliberate decision in commit `f9c25e0`; do not revert to 17) |
 | Kotlin language/API version | 2.2 (`kotlinReleaseVersion`) |
 | Kotlin compiler (KGP) | 2.4.21 |
-| Test framework | Kotest 6.2.6 (shared `api-spec` suites run through `apis:fluent-en`) |
+| Test framework | Kotest 6.2.6 (one shared suite in `compatibility-tests/src/test/kotlin`, run by `:library`) |
 | Atrium | 0.16.0 (upgrade is packages 6-10) |
 | Dokka / Vanniktech publish | 2.2.0 / 0.37.0 |
 | Public releases | 1.0.1 (Maven Central `de.joshuagleitze:atrium-gradle-testkit-{fluent-en,logic,translation-en}`, GitHub v1.0.1) |
-| Modules | `api-spec`, `apis:fluent-en`, `logic`, `translations:en`, `example-project` (included build `build-logic`) |
+| Modules | `:library` (`library/`, published), `:example-project` (included build `build-logic`; standalone consumer build `compatibility-tests/`) |
 
 ## Package progress (27 packages, see the work plan for scope and dependencies)
 
@@ -36,7 +36,7 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 9. Complete migration to stable Atrium 1.3 | **in progress** - commit `build: migrate Atrium to 1.3` awaiting review/merge; evidence in `9/` |
 | 10. Introduce the clean idiomatic v2 expectation API | **done** - merged in #199 (`0c0a8b4`); evidence in `10/` |
 | 11. Consolidate the library into one neutral publication | **done** - merged in #200 (`c61a298`); evidence in `11/` |
-| 12. Stage and consume the actual publication locally | **in progress** - verified; awaiting merge; evidence in `12/` |
+| 12. Stage and consume the actual publication locally | **done** - merged in #203 (`7f43a15`); evidence in `12/` |
 | 13. Commit and enforce the v2 public ABI reference | **done** - merged in #201 (`aa7a6f6`); evidence in `13/` |
 | 14. Run one shared suite under both TestKit clients | **in progress** |
 | 15. Verify minimum and current Kotlin consumers | **in progress** |
@@ -44,7 +44,7 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 17. Add explicit compiler and TestKit CI lanes | not started |
 | 18. Replace Surefire reporting with complete artifact reports | not started |
 | 19. Submit the trusted main dependency graph | **done** - merged in #202 (`fa7886d`); evidence in `19/` |
-| 20. Publishable docs with executable migration samples | **in progress** |
+| 20. Publishable docs with executable migration samples | **in progress** - awaiting review/merge; evidence in `20/` |
 | 21. Write the major changelog and migration guide | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
@@ -96,16 +96,14 @@ Bring the `atrium-gradle-testkit` project up-to-date: modern Java, modern Gradle
 ## Project Structure
 
 ```
-├── api-spec/          # reusable Kotest FunSpec suites and local SubjectLessSpec registration support
-├── apis/fluent-en/    # published fluent Atrium API with concrete Kotest suites
-├── example-project/   # Kotest TestKit usage example with an isolated temporary project
-├── logic/             # core assertion logic (published)
-├── translations/en/   # English translations (published)
-└── build-logic/       # included build with the convention plugins (Kotlin, coordinates, documentation, publishing)
+├── library/             # the published neutral artifact, its runnable KDoc samples and the Kotest suite wiring
+├── compatibility-tests/ # shared Kotest suite sources and standalone consumer builds (not a host subproject)
+├── example-project/     # Kotest TestKit usage example with an isolated temporary project
+└── build-logic/         # included build with the convention plugins (Kotlin, coordinates, documentation, publishing)
 ```
 
-Published modules: `apis:fluent-en`, `logic`, `translations:en` (they apply the `atrium-gradle-testkit-module` convention plugin).
-Each published module releases to GitHub Packages + Maven Central via the vanniktech maven-publish plugin, which also signs the publications.
+Published module: `library` (applies the `atrium-gradle-testkit-module` convention plugin).
+The published module releases to GitHub Packages + Maven Central via the vanniktech maven-publish plugin, which also signs the publications.
 
 ## Phase Status
 
