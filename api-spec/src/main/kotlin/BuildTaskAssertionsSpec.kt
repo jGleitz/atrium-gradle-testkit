@@ -8,10 +8,6 @@ import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.fluent.en_GB.toThrow
 import ch.tutteli.atrium.api.verbs.expect
 import ch.tutteli.atrium.creating.Expect
-import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.INVOKED
-import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.OUTCOME
-import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS
-import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS_NOT
 import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.BuildTask
@@ -55,8 +51,8 @@ abstract class BuildTaskAssertionsSpec(
 		fixtures.setupCompleted()
 	}
 
-	val wasInvokedFragments = listOf("${WAS.getDefault()}:", INVOKED.getDefault())
-	fun outcomeFragments(outcome: TaskOutcome) = wasInvokedFragments + listOf("${OUTCOME.getDefault()}:", outcome.name)
+	val wasInvokedFragments = listOf("was:", "invoked")
+	fun outcomeFragments(outcome: TaskOutcome) = wasInvokedFragments + listOf("outcome:", outcome.name)
 
 	registerSubjectLessTests(
 		listOf(
@@ -66,7 +62,7 @@ abstract class BuildTaskAssertionsSpec(
 			},
 			SubjectLessCase<BuildTask?>(
 				"wasNotInvoked",
-				listOf("${WAS_NOT.getDefault()}:", INVOKED.getDefault())
+				listOf("was not:", "invoked")
 			) { wasNotInvoked() },
 			SubjectLessCase<BuildTask?>("wasSuccessful", outcomeFragments(SUCCESS)) { wasSuccessful() },
 			SubjectLessCase<BuildTask?>("failed", outcomeFragments(FAILED)) { failed() },
@@ -102,7 +98,7 @@ abstract class BuildTaskAssertionsSpec(
 			test("fails if the task was not invoked") {
 				expect {
 					expect(successRun.task(":iDontExist")).assertWasInvoked()
-				}.toThrow<AssertionError>().messageToContain(WAS.getDefault(), INVOKED.getDefault())
+				}.toThrow<AssertionError>().messageToContain("was", "invoked")
 			}
 		}
 	}
@@ -130,13 +126,13 @@ abstract class BuildTaskAssertionsSpec(
 		test("fails if the task was invoked directly") {
 			expect {
 				expect(successRun.task(":clean")).wasNotInvoked()
-			}.toThrow<AssertionError>().messageToContain(WAS_NOT.getDefault(), INVOKED.getDefault())
+			}.toThrow<AssertionError>().messageToContain("was not", "invoked")
 		}
 
 		test("fails if the task was invoked transitively") {
 			expect {
 				expect(successRun.task(":successTask")).wasNotInvoked()
-			}.toThrow<AssertionError>().messageToContain(WAS_NOT.getDefault(), INVOKED.getDefault())
+			}.toThrow<AssertionError>().messageToContain("was not", "invoked")
 		}
 
 		test("succeeds if the task was not invoked") {
@@ -173,14 +169,14 @@ abstract class BuildTaskAssertionsSpec(
 				test("fails if the outcome is ${otherCheck.outcome}") {
 					expect {
 						expect(outcomeRuns.getValue(otherCheck.outcome).task(otherCheck.task)).assertOutcome()
-					}.toThrow<AssertionError>().messageToContain(OUTCOME.getDefault(), outcome.name, otherCheck.outcome.name)
+					}.toThrow<AssertionError>().messageToContain("outcome", outcome.name, otherCheck.outcome.name)
 				}
 			}
 
 			test("fails if the task was not invoked") {
 				expect {
 					expect(successRun.task("iDontExist")).assertOutcome()
-				}.toThrow<AssertionError>().messageToContain(outcome.name, WAS.getDefault(), INVOKED.getDefault())
+				}.toThrow<AssertionError>().messageToContain(outcome.name, "was", "invoked")
 			}
 		}
 	}

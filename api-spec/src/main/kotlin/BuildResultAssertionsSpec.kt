@@ -8,8 +8,6 @@ import ch.tutteli.atrium.api.fluent.en_GB.toEqual
 import ch.tutteli.atrium.api.fluent.en_GB.toThrow
 import ch.tutteli.atrium.api.verbs.expect
 import ch.tutteli.atrium.creating.Expect
-import de.joshuagleitze.test.gradle.translation.en.BuildResultAssertions.OUTPUT
-import de.joshuagleitze.test.gradle.translation.en.BuildResultAssertions.TASK
 import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.BuildTask
@@ -53,13 +51,13 @@ abstract class BuildResultAssertionsSpec(
 		listOf(
 			// since Atrium 0.17 (robstoll/atrium#950), a feature without subject and without subsequent expectations is not
 			// reported on its own, so the feature-only overloads are checked together with an expectation on the feature
-			SubjectLessCase<BuildResult>("output", listOf("${OUTPUT.getDefault()}:", "irrelevant")) {
+			SubjectLessCase<BuildResult>("output", listOf("output:", "irrelevant")) {
 				outputFeature().toEqual("irrelevant")
 			},
-			SubjectLessCase<BuildResult>("output { }", listOf("${OUTPUT.getDefault()}:", "irrelevant")) {
+			SubjectLessCase<BuildResult>("output { }", listOf("output:", "irrelevant")) {
 				outputWithCreator { toEqual("irrelevant") }
 			},
-			SubjectLessCase<BuildResult>("task(path)", listOf("${TASK.getDefault()} 'irrelevant':")) {
+			SubjectLessCase<BuildResult>("task(path)", listOf("task 'irrelevant':")) {
 				taskFeature("irrelevant").toEqual(null)
 			}
 		)
@@ -84,7 +82,7 @@ abstract class BuildResultAssertionsSpec(
 			test("describes the output feature") {
 				expect {
 					expect(loggingTaskResult).assertOutputContains("the answer to the ultimate question of life, the universe, and everything")
-				}.toThrow<AssertionError>().messageToContain("${OUTPUT.getDefault()}:", "To be, or not to be, that is the question:")
+				}.toThrow<AssertionError>().messageToContain("output:", "To be, or not to be, that is the question:")
 			}
 		}
 	}
@@ -93,7 +91,7 @@ abstract class BuildResultAssertionsSpec(
 		test("fails if the assertionCreator does not create an assertion") {
 			expect {
 				expect(loggingTaskResult).outputWithCreator { }
-			}.toThrow<AssertionError>().messageToContain("${OUTPUT.getDefault()}:", "at least one expectation defined")
+			}.toThrow<AssertionError>().messageToContain("output:", "at least one expectation defined")
 		}
 	}
 
@@ -107,7 +105,7 @@ abstract class BuildResultAssertionsSpec(
 		test("describes an existing task") {
 			expect {
 				expect(loggingTaskResult).taskFeature(":logHamlet").toEqual(null)
-			}.toThrow<AssertionError>().messageToContain("${TASK.getDefault()} ':logHamlet'")
+			}.toThrow<AssertionError>().messageToContain("task ':logHamlet'")
 		}
 
 		test("allows to check for a non-existent task") {
@@ -119,7 +117,7 @@ abstract class BuildResultAssertionsSpec(
 		test("describes a non-existent task") {
 			expect {
 				expect(loggingTaskResult).taskFeature(":iDontExist").notToEqualNull()
-			}.toThrow<AssertionError>().messageToContain("${TASK.getDefault()} ':iDontExist': null")
+			}.toThrow<AssertionError>().messageToContain("task ':iDontExist': null")
 		}
 	}
 })

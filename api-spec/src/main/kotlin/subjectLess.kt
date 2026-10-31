@@ -11,8 +11,10 @@ import ch.tutteli.atrium.assertions.AssertionGroup
 import ch.tutteli.atrium.assertions.ExplanatoryAssertionGroupType
 import ch.tutteli.atrium.assertions.builders.assertionBuilder
 import ch.tutteli.atrium.core.None
+import ch.tutteli.atrium.core.ExperimentalNewExpectTypes
 import ch.tutteli.atrium.creating.CollectingExpect
 import ch.tutteli.atrium.creating.Expect
+import ch.tutteli.atrium.creating.ExperimentalComponentFactoryContainer
 import ch.tutteli.atrium.creating.build
 import ch.tutteli.atrium.logic._logic
 import ch.tutteli.atrium.logic.creating.RootExpectBuilder
@@ -40,6 +42,7 @@ internal data class SubjectLessCase<T>(
  * supported public API: [RootExpectBuilder] from `atrium-logic` is Atrium’s documented entry point for creating
  * custom expectation verbs.
  */
+@OptIn(ExperimentalNewExpectTypes::class, ExperimentalComponentFactoryContainer::class)
 private fun newAssertionContainer(): Expect<Double> = RootExpectBuilder.forSubject(1.0)
 	.withVerb("custom assertion verb")
 	.withOptions {
@@ -53,6 +56,7 @@ private fun newAssertionContainer(): Expect<Double> = RootExpectBuilder.forSubje
  * subject transformation that could not be carried out ([None]). This is not the same as a subject that is present
  * but `null`.
  */
+@OptIn(ExperimentalComponentFactoryContainer::class)
 internal fun <T> collectAssertionsWithoutSubject(createAssertion: Expect<T>.() -> Unit): List<Assertion> =
 	CollectingExpect<T>(None, newAssertionContainer()._logic.components)
 		.appendAsGroup(createAssertion)
@@ -62,6 +66,7 @@ internal fun <T> collectAssertionsWithoutSubject(createAssertion: Expect<T>.() -
  * Puts the given [assertions] into an [AssertionGroup] of the [ExplanatoryAssertionGroupType], adds that group to an
  * assertion container and reports it. Returns the report.
  */
+@OptIn(ExperimentalComponentFactoryContainer::class)
 internal fun reportInExplanatoryGroup(assertions: List<Assertion>): String {
 	expandAssertionGroups(assertions)
 	val container = newAssertionContainer()
