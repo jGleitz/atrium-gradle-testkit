@@ -9,6 +9,14 @@ The most important finding: the Proof-based redesign (`ProofContainer`, `_core`,
 
 ## Key Findings
 
+**Verified package-9 checkpoint (2026-10-31).** This branch uses Atrium 1.3.0 throughout, with String descriptions
+and `Text("invoked")` representations instead of this project's translation enums. The three publications and public
+function names remain until packages 11 and 10, respectively. All twelve resolved Atrium coordinates (including JVM
+variants) exist on Maven Central. Published JVM metadata requests Kotlin stdlib/reflect 2.0.21; `Expect` and `Text`
+carry Kotlin metadata 1.4.3 and Java 11 bytecode. These do not raise this project's Kotlin language/API 2.2 or JVM 21
+targets. Evidence, tagged 1.1/1.2/1.3 sources and release notes are in the control checkout's
+`.omo/evidence/major-release-modernization/9/`.
+
 ### 1. What changed between 0.16 and 1.3 (relevant to extension authors)
 
 | Release | Change affecting extensions |
@@ -53,10 +61,10 @@ The most important finding: the Proof-based redesign (`ProofContainer`, `_core`,
 The Atrium repo's top level in 1.x is: `apis/` (`atrium-api-fluent`, `atrium-api-infix`), `atrium-core`, `logic/atrium-logic`, `translations/atrium-translations-en_GB`, `bundles/` (`atrium-fluent`, `atrium-infix`), `misc/` (verbs, specs, tools, readme-examples) and `samples/`. Bundles "bundle API, logic, core, translation as well as predefined expectation verbs".\[4\]\[11\] Files follow `apis/fluent/atrium-api-fluent/src/{commonMain,jvmMain}/kotlin/ch/tutteli/atrium/api/fluent/en_GB/xyExpectations.kt`, with logic implementations at `logic/atrium-logic/src/{commonMain,jvmMain}/kotlin/ch/tutteli/atrium/logic/impl/DefaultXyAssertions.kt`. All modules are Kotlin Multiplatform. With Kotlin ≥ 1.5 consumers use the unsuffixed artifact (e.g. `atrium-fluent`); `-jvm`/`-js` suffixes are only needed for older Kotlin.\[4\]\[11\] `main` already builds as `2.0.0-SNAPSHOT`.\[16\]
 
 **Recommended dependencies for a library like atrium-gradle-testkit** (my recommendation; Atrium does not publish a guide for this):
-- `api("ch.tutteli.atrium:atrium-api-fluent:1.3.0")`, because your public signatures expose `Expect<T>`.
+- `api("ch.tutteli.atrium:atrium-core:1.3.0")`, because `Expect<T>` is defined in core. Only add `atrium-api-fluent` when main code uses its functions.
 - `api` or `implementation` on `atrium-logic`, since `_logic` is needed for custom descriptions and safe extraction. The README examples import `ch.tutteli.atrium.logic._logic`.\[4\]\[17\]
 - Do **not** depend on the `atrium-fluent` bundle or `atrium-verbs` in `main`. Users bring their own verb, and the README even shows excluding `atrium-verbs` to define your own.\[4\]\[11\]
-- No Atrium BOM was found in the sources reviewed. Pin a single `atriumVersion`.
+- No Atrium BOM was found in the sources reviewed. Keep the cohort aligned with literal versions in the function-appropriate catalogs.
 - Drop `atrium-translations-*` once descriptions are `String`s.
 
 **Minimum versions for 1.3.0:** "Kotlin: 1.4, JVM: 11, JS: IR-Backend".\[4\]\[11\] Atrium itself builds with a newer compiler (1.1.0 used "kotlin 1.8.21 but api/languageLevel 1.4") and officially supports JDK 17.\[3\]
@@ -78,7 +86,7 @@ The Atrium repo's top level in 1.x is: `apis/` (`atrium-api-fluent`, `atrium-api
 
 - **jGleitz/atrium-gradle-testkit** is the canonical third-party extension and is listed under "Third-party Extensions" in older Atrium READMEs.\[5\]\[30\] It is **still on Atrium 0.16.0**.\[25\] The modules are `apis/fluent-en`, `logic`, `translations/en` and `api-spec`, and the published `atrium-gradle-testkit-logic` 1.0.1 depends on `atrium-core-api` and `atrium-logic`.\[14\]\[31\] A Renovate PR (#171, **closed as "autoclosed" on Oct 26, 2026** – verified Oct 27, 2026) had proposed bumping `atrium-logic` and `atrium-specs` to 1.2.0 and `atrium-core-api` to 1.0.0. That bump will not compile as-is, because `atrium-core-api` was renamed to `atrium-core` in 0.17.\[2\] Its Sept 2026 modernisation steps (Kotest, Dokka 2, Gradle 9.7.1 – the build has since moved to Gradle 9.8.2 – `testkit` as an `api` dependency) are a reasonable model for build hygiene, but **it is not a 1.x reference implementation**.\[25\]\[29\]\[32\]
 - **robstoll/niok** (by the Atrium author) uses `atrium-fluent` 1.3.0 for its tests (Renovate PR #272, merged Oct 22, 2026).\[9\] It is a consumer, not an extension.
-- I found no published third-party extension already ported to 1.x (no "atrium-ktor" or similar). The best 1.x reference is Atrium's own `api-fluent` + `atrium-logic` sources, e.g. `DefaultListAssertions` for safe `get` extraction, `DefaultFloatingPointAssertions` for explanatory assertions and hints, and `DefaultAnyAssertions` for reported subject changes. The README links all of these as templates.\[4\]
+- The verified 1.3 references are Atrium's own `api-fluent` + `atrium-logic` sources, e.g. `DefaultListAssertions` for safe `get` extraction and the tagged `subjectLessTestSetup` for absent-subject collection with `appendAsGroup` and `_logic.append`. The local helper follows that pattern, with explicit opt-ins to the component container and custom expectation builder APIs; it does not depend on atrium-specs.
 
 ## Details: Before (0.16) vs. After (1.3) Code
 
@@ -164,32 +172,27 @@ The extractor is a Java getter, so `feature(BuildResult::getOutput)` would repor
 ```
 
 ```kotlin
-// AFTER (1.3) — logic-level helper kept internal, API overloads delegate to it  (verify builder names)
-import ch.tutteli.atrium.core.None
-import ch.tutteli.atrium.core.Some
+// Verified 1.3 pattern for this library: a missing task is a present null, not failed extraction.
 import ch.tutteli.atrium.creating.AssertionContainer
 import ch.tutteli.atrium.logic._logic
-import ch.tutteli.atrium.logic.extractFeature
-import ch.tutteli.atrium.reporting.Text
+import ch.tutteli.atrium.logic.manualFeature
 
 internal fun <T : BuildResult> AssertionContainer<T>.task(path: String) =
-    extractFeature
-        .withDescription("task $path")
-        .withRepresentationForFailure(Text("❗❗ task was not part of the build"))
-        .withFeatureExtraction { result -> result.task(path)?.let { Some(it) } ?: None }
-        .withoutOptions()
-        .build()
+    manualFeature("task '$path'") { task(path) }
 
 /** @return The newly created [Expect] for the extracted feature. @since 2.0.0 */
-fun <T : BuildResult> Expect<T>.task(path: String): Expect<BuildTask> =
+fun <T : BuildResult> Expect<T>.task(path: String): Expect<BuildTask?> =
     _logic.task(path).transform()
 
 /** @return an [Expect] for the subject of `this` expectation. @since 2.0.0 */
-fun <T : BuildResult> Expect<T>.task(path: String, assertionCreator: Expect<BuildTask>.() -> Unit): Expect<T> =
+fun <T : BuildResult> Expect<T>.task(path: String, assertionCreator: Expect<BuildTask?>.() -> Unit): Expect<T> =
     _logic.task(path).collectAndAppend(assertionCreator)
 ```
 
-This mirrors what the README describes: "in case it is not always safe to call a method (e.g. `List.get`) … wrap it into an own feature extractor and use `_logic.extractFeature`",\[10\] with `DefaultListAssertions` as the template.\[4\]\[8\] The exact `Some`/`None` package and the `transform()`/`collectAndAppend()` step names are **(verify)** items; confirm them against `DefaultListAssertions.kt` in `logic/atrium-logic` at tag `v1.3.0`.
+The tagged `DefaultListAssertions.get` uses `extractFeature.methodCall`, `Option.someIf` and a failure representation
+because an out-of-bounds index cannot be extracted. `BuildResult.task`, in contrast, safely returns null for a missing
+task, so `manualFeature` preserves that present-null subject. The tagged fluent list API confirms `transform()` and
+`collectAndAppend()`. The paired task creator overload shown here is the package-10 destination, not part of package 9.
 
 **How the logic layer should be organised now.** In 0.16 an extension typically had a separate `logic` module with `AssertionContainer<T>.xy()` functions and an API module calling `_logicAppend { xy() }`.\[17\] That still works in 1.3, but Atrium says atrium-logic will be folded into core and removed "with 3.0.0 at the latest", and that `AssertionContainer`/`Assertion` will be renamed under the Proof rewrite in 2.x.\[1\] My recommendation:
 - Collapse the extension's separate `logic` and `translations` modules into the API module.

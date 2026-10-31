@@ -8,4 +8,4 @@ import org.gradle.testkit.runner.BuildResult
 
 fun AssertionContainer<BuildResult>.output() = manualFeature(OUTPUT) { output }
 
-fun AssertionContainer<BuildResult>.task(path: String) = manualFeature("${TASK.value} '$path'") { task(path) }
+fun AssertionContainer<BuildResult>.task(path: String) = manualFeature("$TASK '$path'") { task(path) }

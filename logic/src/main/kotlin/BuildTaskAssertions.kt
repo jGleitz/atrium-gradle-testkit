@@ -8,6 +8,7 @@ import ch.tutteli.atrium.logic._logicAppend
 import ch.tutteli.atrium.logic.changeSubject
 import ch.tutteli.atrium.logic.manualFeature
 import ch.tutteli.atrium.logic.toBe
+import ch.tutteli.atrium.reporting.Text
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.INVOKED
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.OUTCOME
 import de.joshuagleitze.test.gradle.translation.en.BuildTaskAssertions.WAS
@@ -16,13 +17,13 @@ import org.gradle.testkit.runner.BuildTask
 import org.gradle.testkit.runner.TaskOutcome
 
 fun AssertionContainer<BuildTask?>.wasInvoked() = changeSubject.reportBuilder()
-	.withDescriptionAndRepresentation(WAS, INVOKED)
+	.withDescriptionAndRepresentation(WAS, Text(INVOKED))
 	.withTransformation { if (it != null) Some(it) else None }
 	.withDefaultFailureHandler()
 	.build()
 
 fun AssertionContainer<BuildTask?>.wasNotInvoked() = changeSubject.reportBuilder()
-	.withDescriptionAndRepresentation(WAS_NOT, INVOKED)
+	.withDescriptionAndRepresentation(WAS_NOT, Text(INVOKED))
 	.withTransformation { if (it == null) Some(Unit) else None }
 	.withDefaultFailureHandler()
 	.build()

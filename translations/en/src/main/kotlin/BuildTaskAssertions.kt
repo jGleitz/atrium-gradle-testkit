@@ -1,10 +1,8 @@
 package de.joshuagleitze.test.gradle.translation.en
 
-import ch.tutteli.atrium.reporting.translating.StringBasedTranslatable
-
-enum class BuildTaskAssertions(override val value: String): StringBasedTranslatable {
-	WAS("was"),
-	WAS_NOT("was not"),
-	INVOKED("invoked"),
-	OUTCOME("outcome")
+object BuildTaskAssertions {
+	const val WAS = "was"
+	const val WAS_NOT = "was not"
+	const val INVOKED = "invoked"
+	const val OUTCOME = "outcome"
 }
