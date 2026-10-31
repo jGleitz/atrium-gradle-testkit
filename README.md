@@ -65,6 +65,13 @@ This library requires:
 
 For contributors: the Gradle launcher JDK (Temurin 27, selected by `mise.toml`) is independent of the JDK toolchain used to compile and test (21, 25 or 27, CI tests all three), the bytecode target (Java 21, `javaReleaseVersion`) and the Kotlin language/API version (2.2, `kotlinReleaseVersion`); the Kotlin compiler itself is the current Kotlin Gradle plugin version from the version catalog.
 
+### Public API reference (ABI)
+
+The public binary API of `:library` is checked in as `library/api/library.api` (Kotlin Gradle plugin's built-in ABI validation).
+`./gradlew build` (through `:library:check`) runs `:library:checkKotlinAbi`, which fails if the compiled public API differs from that file; it never rewrites it.
+If you change the public API on purpose, run `./gradlew :library:updateKotlinAbi`, review the diff of `library/api/library.api` and commit it together with your change.
+This only detects unintended signature changes in this library; it does not check linkage against older versions of its dependencies.
+
 ## [Contributions welcome](http://contributionswelcome.org/)
 
 All contributions (no matter if small) are always welcome.

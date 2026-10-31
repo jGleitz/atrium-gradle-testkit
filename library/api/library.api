@@ -1,0 +1,20 @@
+public final class de/joshuagleitze/test/gradle/BuildResultFeatureExtractorsKt {
+	public static final fun getOutput (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun output (Lch/tutteli/atrium/creating/Expect;Lkotlin/jvm/functions/Function1;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun task (Lch/tutteli/atrium/creating/Expect;Ljava/lang/String;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun task (Lch/tutteli/atrium/creating/Expect;Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lch/tutteli/atrium/creating/Expect;
+}
+
+public final class de/joshuagleitze/test/gradle/BuildTaskExpectationsKt {
+	public static final fun notToBeInvoked (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toBeInvoked (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toBeInvoked (Lch/tutteli/atrium/creating/Expect;Lkotlin/jvm/functions/Function1;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toBeSkipped (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toBeSuccessful (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toBeUpToDate (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toHaveBeenLoadedFromCache (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toHaveFailed (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toHaveNoSource (Lch/tutteli/atrium/creating/Expect;)Lch/tutteli/atrium/creating/Expect;
+	public static final fun toHaveOutcome (Lch/tutteli/atrium/creating/Expect;Lorg/gradle/testkit/runner/TaskOutcome;)Lch/tutteli/atrium/creating/Expect;
+}
+

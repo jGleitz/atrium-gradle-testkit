@@ -27,7 +27,6 @@ tasks.withType<JavaCompile>().configureEach {
 
 kotlin {
 	compilerOptions {
-		// TODO test ABI compat
 		languageVersion = kotlinReleaseVersion
 		apiVersion = kotlinReleaseVersion
 		jvmTarget = javaReleaseVersion.map { JvmTarget.fromTarget(it.toString()) }

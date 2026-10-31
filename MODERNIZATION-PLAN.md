@@ -36,7 +36,9 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 9. Complete migration to stable Atrium 1.3 | **in progress** - commit `build: migrate Atrium to 1.3` awaiting review/merge; evidence in `9/` |
 | 10. Introduce the clean idiomatic v2 expectation API | **in progress** - verified locally; commit `feat!: adopt idiomatic Atrium expectation API` awaiting review/merge; evidence in `10/` |
 | 11. Consolidate the library into one neutral publication | **in progress** - awaiting review/merge; evidence in `11/` |
-| 12-21 | not started |
+| 12 | not started |
+| 13. Commit and enforce the v2 public ABI reference | **in progress** - commit `build: enforce checked-in Kotlin ABI validation` awaiting review/merge; evidence in `13/` |
+| 14-21 | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 
