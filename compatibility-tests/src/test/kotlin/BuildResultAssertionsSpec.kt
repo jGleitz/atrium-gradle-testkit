@@ -13,8 +13,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.BuildTask
 
 /**
- * The behaviour every API must provide for assertions on a [BuildResult]. Concrete API modules provide their
- * assertion functions as lambdas.
+ * Shared behaviour for assertions on a [BuildResult], run by the library and the standalone consumers.
  */
 abstract class BuildResultAssertionsSpec(
 	outputFeature: Expect<BuildResult>.() -> Expect<String>,

@@ -22,8 +22,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * The behaviour every API must provide for assertions on a [BuildTask]. Concrete API modules provide their
- * assertion functions as lambdas.
+ * Shared behaviour for assertions on a [BuildTask], run by the library and the standalone consumers.
  */
 abstract class BuildTaskAssertionsSpec(
 	toBeInvokedFeature: Expect<BuildTask?>.() -> Expect<BuildTask>,

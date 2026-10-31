@@ -2,9 +2,9 @@ package de.joshuagleitze.test.gradle
 
 import ch.tutteli.atrium.creating.Expect
 import ch.tutteli.atrium.logic._logic
-import de.joshuagleitze.test.gradle.logic.notToBeInvoked
-import de.joshuagleitze.test.gradle.logic.toBeInvoked
-import de.joshuagleitze.test.gradle.logic.toHaveOutcome
+import de.joshuagleitze.test.gradle.internal.notToBeInvoked
+import de.joshuagleitze.test.gradle.internal.toBeInvoked
+import de.joshuagleitze.test.gradle.internal.toHaveOutcome
 import org.gradle.testkit.runner.BuildTask
 import org.gradle.testkit.runner.TaskOutcome
 import org.gradle.testkit.runner.TaskOutcome.FAILED

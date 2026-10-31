@@ -3,23 +3,24 @@ plugins {
 }
 
 atriumGradleTestkitModule {
-	artifactId = "atrium-gradle-testkit-fluent-en"
+	artifactId = "atrium-gradle-testkit"
 }
 
 dependencies {
 	api(gradleTestKit())
 	api(libs.atrium.core)
 
-	implementation(project(":logic"))
-	implementation(project(":translations:en"))
 	implementation(libs.atrium.logic)
 
-	testImplementation(project(":api-spec"))
+	testImplementation(testLibs.atrium.fluent)
 	testImplementation(testLibs.kotest.runner.junit5)
 }
 
 kotlin {
 	explicitApi()
+	sourceSets.test {
+		kotlin.srcDir(rootProject.layout.projectDirectory.dir("compatibility-tests/src/test/kotlin"))
+	}
 }
 
 dokka {
