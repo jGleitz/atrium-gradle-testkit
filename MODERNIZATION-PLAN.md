@@ -34,11 +34,18 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 7. Migrate Atrium cohort to JVM-11-era 0.18 | **in progress** - commit `build: migrate Atrium to 0.18` awaiting review/merge; evidence in `7/` |
 | 8. Migrate Atrium cohort across the 1.0 boundary | **in progress** - commit `build: migrate Atrium to 1.0` awaiting review/merge; evidence in `8/` |
 | 9. Complete migration to stable Atrium 1.3 | **in progress** - commit `build: migrate Atrium to 1.3` awaiting review/merge; evidence in `9/` |
-| 10. Introduce the clean idiomatic v2 expectation API | **in progress** - verified locally; commit `feat!: adopt idiomatic Atrium expectation API` awaiting review/merge; evidence in `10/` |
-| 11. Consolidate the library into one neutral publication | **in progress** - awaiting review/merge; evidence in `11/` |
-| 12 | not started |
-| 13. Commit and enforce the v2 public ABI reference | **in progress** - commit `build: enforce checked-in Kotlin ABI validation` awaiting review/merge; evidence in `13/` |
-| 14-21 | not started |
+| 10. Introduce the clean idiomatic v2 expectation API | **done** - merged in #199 (`0c0a8b4`); evidence in `10/` |
+| 11. Consolidate the library into one neutral publication | **done** - merged in #200 (`c61a298`); evidence in `11/` |
+| 12. Stage and consume the actual publication locally | **in progress** |
+| 13. Commit and enforce the v2 public ABI reference | **done** - merged in #201 (`aa7a6f6`); evidence in `13/` |
+| 14. Run one shared suite under both TestKit clients | **in progress** |
+| 15. Verify minimum and current Kotlin consumers | **in progress** |
+| 16. Gate production coverage independently per runtime | not started |
+| 17. Add explicit compiler and TestKit CI lanes | not started |
+| 18. Replace Surefire reporting with complete artifact reports | not started |
+| 19. Submit the trusted main dependency graph | **in progress** - awaiting merge; evidence in `19/` |
+| 20. Publishable docs with executable migration samples | **in progress** |
+| 21. Write the major changelog and migration guide | not started |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 
