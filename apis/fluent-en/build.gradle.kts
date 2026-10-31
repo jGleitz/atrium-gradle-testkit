@@ -21,3 +21,9 @@ dependencies {
 kotlin {
 	explicitApi()
 }
+
+dokka {
+	dokkaSourceSets.configureEach {
+		samples.from("src/test/kotlin/samples")
+	}
+}

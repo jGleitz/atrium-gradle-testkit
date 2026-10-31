@@ -19,7 +19,8 @@ import org.gradle.testkit.runner.BuildTask
 abstract class BuildResultAssertionsSpec(
 	outputFeature: Expect<BuildResult>.() -> Expect<String>,
 	outputWithCreator: Expect<BuildResult>.(Expect<String>.() -> Unit) -> Expect<BuildResult>,
-	taskFeature: Expect<BuildResult>.(String) -> Expect<BuildTask?>
+	taskFeature: Expect<BuildResult>.(String) -> Expect<BuildTask?>,
+	taskWithCreator: Expect<BuildResult>.(String, Expect<BuildTask?>.() -> Unit) -> Expect<BuildResult>
 ): FunSpec({
 	val fixtures = TemporaryFixtures(this, "atrium-gradle-testkit-build-result-")
 	lateinit var loggingTaskResult: BuildResult
@@ -59,6 +60,9 @@ abstract class BuildResultAssertionsSpec(
 			},
 			SubjectLessCase<BuildResult>("task(path)", listOf("task 'irrelevant':")) {
 				taskFeature("irrelevant").toEqual(null)
+			},
+			SubjectLessCase<BuildResult>("task(path) { }", listOf("task 'irrelevant':")) {
+				taskWithCreator("irrelevant") { toEqual(null) }
 			}
 		)
 	)
@@ -87,7 +91,7 @@ abstract class BuildResultAssertionsSpec(
 		}
 	}
 
-	context("output { }") {
+	context("output creator validation") {
 		test("fails if the assertionCreator does not create an assertion") {
 			expect {
 				expect(loggingTaskResult).outputWithCreator { }
@@ -118,6 +122,56 @@ abstract class BuildResultAssertionsSpec(
 			expect {
 				expect(loggingTaskResult).taskFeature(":iDontExist").notToEqualNull()
 			}.toThrow<AssertionError>().messageToContain("task ':iDontExist': null")
+		}
+	}
+
+	context("task(path) { }") {
+		test("allows to check an existing task") {
+			expect {
+				expect(loggingTaskResult).taskWithCreator(":logHamlet") { notToEqualNull() }
+			}.notToThrow()
+		}
+
+		test("describes an existing task") {
+			expect {
+				expect(loggingTaskResult).taskWithCreator(":logHamlet") { toEqual(null) }
+			}.toThrow<AssertionError>().messageToContain("task ':logHamlet'")
+		}
+
+		test("allows to check for a non-existent task") {
+			expect {
+				expect(loggingTaskResult).taskWithCreator(":iDontExist") { toEqual(null) }
+			}.notToThrow()
+		}
+
+		test("describes a non-existent task") {
+			expect {
+				expect(loggingTaskResult).taskWithCreator(":iDontExist") { notToEqualNull() }
+			}.toThrow<AssertionError>().messageToContain("task ':iDontExist': null")
+		}
+
+		test("retains the build result as subject") {
+			expect {
+				expect(loggingTaskResult)
+					.taskWithCreator(":logHamlet") { notToEqualNull() }
+					.toEqual(loggingTaskResult)
+			}.notToThrow()
+		}
+
+		test("fails if the assertionCreator does not create an assertion") {
+			expect {
+				expect(loggingTaskResult).taskWithCreator(":logHamlet") { }
+			}.toThrow<AssertionError>().messageToContain("task ':logHamlet'", "at least one expectation defined")
+		}
+	}
+
+	context("output { } (subject)") {
+		test("retains the build result as subject") {
+			expect {
+				expect(loggingTaskResult)
+					.outputWithCreator { toContain("To be, or not to be") }
+					.toEqual(loggingTaskResult)
+			}.notToThrow()
 		}
 	}
 })
