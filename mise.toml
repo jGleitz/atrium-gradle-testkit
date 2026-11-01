@@ -1,4 +1,4 @@
 [tools]
-java = ["temurin-27", "temurin-25", "temurin-21"]
+java = ["temurin-27.0.1+0", "temurin-25", "temurin-21"]
 gradle = ["9.8.2", "8.14.6"]
-node = "24"
+node = "v24.22.2"
