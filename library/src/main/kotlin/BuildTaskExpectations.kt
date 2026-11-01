@@ -25,8 +25,9 @@ import org.gradle.testkit.runner.TaskOutcome.UP_TO_DATE
 public fun <T : BuildTask?> Expect<T>.toBeInvoked(): Expect<T & Any> = _logic.toBeInvoked().transform()
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [was invoked][toBeInvoked] and that it
- * holds all expectations the given [assertionCreator] creates for it.
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [was
+ * invoked][de.joshuagleitze.test.gradle.toBeInvoked] and that it holds all expectations the given [assertionCreator]
+ * creates for it.
  *
  * @return An [Expect] for the subject of `this` expectation.
  * @throws AssertionError If [assertionCreator] creates no expectation or if one of its expectations does not hold.
@@ -49,8 +50,9 @@ public fun <T : BuildTask?> Expect<T>.toBeInvoked(assertionCreator: Expect<T & A
 public fun <T : BuildTask?> Expect<T>.notToBeInvoked(): Expect<Unit> = _logic.notToBeInvoked().transform()
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [was invoked][toBeInvoked] and that its
- * [outcome][BuildTask.getOutcome] is the [expected] one.
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [was
+ * invoked][de.joshuagleitze.test.gradle.toBeInvoked] and that its [outcome][BuildTask.getOutcome] is the [expected]
+ * one.
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
@@ -60,8 +62,8 @@ public fun <T : BuildTask?> Expect<T>.toHaveOutcome(expected: TaskOutcome): Expe
 	_logic.toHaveOutcome(expected)
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the outcome][toHaveOutcome]
- * [SUCCESS].
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the
+ * outcome][de.joshuagleitze.test.gradle.toHaveOutcome] [SUCCESS].
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
@@ -70,8 +72,8 @@ public fun <T : BuildTask?> Expect<T>.toHaveOutcome(expected: TaskOutcome): Expe
 public fun <T : BuildTask?> Expect<T>.toBeSuccessful(): Expect<T & Any> = toHaveOutcome(SUCCESS)
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the outcome][toHaveOutcome]
- * [FAILED].
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the
+ * outcome][de.joshuagleitze.test.gradle.toHaveOutcome] [FAILED].
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
@@ -80,8 +82,8 @@ public fun <T : BuildTask?> Expect<T>.toBeSuccessful(): Expect<T & Any> = toHave
 public fun <T : BuildTask?> Expect<T>.toHaveFailed(): Expect<T & Any> = toHaveOutcome(FAILED)
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the outcome][toHaveOutcome]
- * [UP_TO_DATE].
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the
+ * outcome][de.joshuagleitze.test.gradle.toHaveOutcome] [UP_TO_DATE].
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
@@ -90,8 +92,8 @@ public fun <T : BuildTask?> Expect<T>.toHaveFailed(): Expect<T & Any> = toHaveOu
 public fun <T : BuildTask?> Expect<T>.toBeUpToDate(): Expect<T & Any> = toHaveOutcome(UP_TO_DATE)
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the outcome][toHaveOutcome]
- * [SKIPPED].
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the
+ * outcome][de.joshuagleitze.test.gradle.toHaveOutcome] [SKIPPED].
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
@@ -100,8 +102,8 @@ public fun <T : BuildTask?> Expect<T>.toBeUpToDate(): Expect<T & Any> = toHaveOu
 public fun <T : BuildTask?> Expect<T>.toBeSkipped(): Expect<T & Any> = toHaveOutcome(SKIPPED)
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the outcome][toHaveOutcome]
- * [FROM_CACHE].
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the
+ * outcome][de.joshuagleitze.test.gradle.toHaveOutcome] [FROM_CACHE].
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
@@ -110,8 +112,8 @@ public fun <T : BuildTask?> Expect<T>.toBeSkipped(): Expect<T & Any> = toHaveOut
 public fun <T : BuildTask?> Expect<T>.toHaveBeenLoadedFromCache(): Expect<T & Any> = toHaveOutcome(FROM_CACHE)
 
 /**
- * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the outcome][toHaveOutcome]
- * [NO_SOURCE].
+ * Expects that the subject of `this` expectation (a [Gradle task][BuildTask]) [has the
+ * outcome][de.joshuagleitze.test.gradle.toHaveOutcome] [NO_SOURCE].
  *
  * @return An [Expect] for the subject of `this` expectation, narrowed to its non-nullable type.
  * @since 2.0.0
