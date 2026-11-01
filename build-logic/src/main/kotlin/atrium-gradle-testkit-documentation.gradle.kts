@@ -7,6 +7,12 @@ plugins {
 val githubRepository = providers.gradleProperty("github.repository")
 val atriumVersion = versionCatalogs.named("libs").findLibrary("atrium-core").get().get().version
 
+// This is the GitHub Pages site root; only the release workflow deploys its contents.
+val pagesSiteRoot = layout.buildDirectory.dir("dokka/html")
+dokka.dokkaPublications.named("html") {
+	outputDirectory.set(pagesSiteRoot)
+}
+
 // The v1 documentation lived below this path of the Pages site. Documentation links in the wild still point there.
 val legacyDocumentationEntry = "apis/atrium-gradle-testkit-fluent-en/atrium-gradle-testkit-fluent-en/de.joshuagleitze.test.gradle"
 

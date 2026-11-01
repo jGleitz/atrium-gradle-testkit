@@ -8,6 +8,12 @@ The v2 library uses the single coordinate `de.joshuagleitze:atrium-gradle-testki
 `atrium-gradle-testkit-fluent-en`, `atrium-gradle-testkit-logic` and `atrium-gradle-testkit-translation-en` artifacts.
 The Kotlin package remains `de.joshuagleitze.test.gradle`.
 
+This library does not publish Gradle TestKit as a dependency, so consumers must declare it themselves. The example does this in [`example-project/build.gradle.kts`](./example-project/build.gradle.kts):
+
+```kotlin
+testImplementation(gradleTestKit())
+```
+
 ## Example
 
 Here is how you can use this library to test Gradle plugins.
@@ -64,6 +70,8 @@ This library requires:
  * Java ≥ 21 (the library's bytecode targets Java 21, so the JVM running your tests must be Java 21 or newer)
 
 For contributors: the Gradle launcher JDK (Temurin 27, selected by `mise.toml`) is independent of the JDK toolchain used to compile and test (21, 25 or 27, CI tests all three), the bytecode target (Java 21, `javaReleaseVersion`) and the Kotlin language/API version (2.2, `kotlinReleaseVersion`); the Kotlin compiler itself is the current Kotlin Gradle plugin version from the version catalog.
+
+The GitHub Pages site root is `library/build/dokka/html`, and only the release workflow deploys it.
 
 ### Public API reference (ABI)
 
