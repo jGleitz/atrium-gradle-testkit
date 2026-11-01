@@ -46,7 +46,7 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 18. Replace Surefire reporting with complete artifact reports | not started |
 | 19. Submit the trusted main dependency graph | **done** - merged in #202 (`fa7886d`); evidence in `19/` |
 | 20. Publishable docs with executable migration samples | **in progress** - awaiting review/merge; evidence in `20/` |
-| 21. Write the major changelog and migration guide | not started |
+| 21. Write the major changelog and migration guide | **in progress** - `CHANGELOG.md` and `MIGRATION.md` awaiting review/merge; evidence in `21/` |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
 | 23-27 | not started |
 
