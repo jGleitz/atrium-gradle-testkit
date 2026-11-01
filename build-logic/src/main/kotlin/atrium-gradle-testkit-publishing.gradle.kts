@@ -89,6 +89,10 @@ tasks.withType<Sign>().configureEach {
 publishing {
 	repositories {
 		maven {
+			name = "verification"
+			url = rootProject.layout.buildDirectory.dir("verification-repository").get().asFile.toURI()
+		}
+		maven {
 			name = "githubPackages"
 			url = uri("https://maven.pkg.github.com/$githubRepository")
 			// Gradle resolves the credentials of every repository in the task graph before it runs any task. Requiring
@@ -103,7 +107,11 @@ publishing {
 mavenPublishing {
 	// Releasing to Maven Central must be requested explicitly, through `publishAndReleaseToMavenCentral`
 	publishToMavenCentral(automaticRelease = false, validateDeployment = DeploymentValidation.PUBLISHED)
-	signAllPublications()
+	// Authorized releases must be signed. Local verification uses the same publication without reading signing keys.
+	// A matching version/tag alone never authorizes a release or enables credential access.
+	if (remotePublicationDenial == null) {
+		signAllPublications()
+	}
 
 	pom {
 		description = "Atrium assertions for testing Gradle plugins."
