@@ -26,6 +26,9 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 kotlin {
+	// The published stdlib requirement must not exceed the supported minimum Kotlin version: a newer stdlib carries
+	// metadata that the minimum compiler cannot read, which would raise every consumer's minimum compiler version.
+	coreLibrariesVersion = "${kotlinReleaseVersion.get().version}.0"
 	compilerOptions {
 		languageVersion = kotlinReleaseVersion
 		apiVersion = kotlinReleaseVersion
