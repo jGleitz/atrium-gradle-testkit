@@ -21,7 +21,6 @@ artifacts. [MIGRATION.md](./MIGRATION.md) has the step-by-step upgrade path and 
   is `toHaveNoSource`.
 - **Removed public helpers.** The `AssertionContainer` functions in `de.joshuagleitze.test.gradle.logic` and the
   translation enums in `de.joshuagleitze.test.gradle.translation.en` are gone. They're internal now.
-- **TestKit isn't a transitive dependency.** Declare `testImplementation(gradleTestKit())` yourself.
 - **Floors raised:** Java 21 (was Java 8 bytecode) and Kotlin 2.2 (was 1.4).
 - **Binary incompatible:** the public functions moved from the `BuildResultAssertionsEnKt` and
   `BuildTaskAssertionsEnKt` classes to `BuildResultFeatureExtractorsKt` and `BuildTaskExpectationsKt`, and all
@@ -39,5 +38,7 @@ artifacts. [MIGRATION.md](./MIGRATION.md) has the step-by-step upgrade path and 
 
 - Failure reports keep the descriptions `output`, `task '<path>'`, `was` / `was not` `invoked` and `outcome`. Layout and
   wording around them follow Atrium 1.3.
+- You still declare `testImplementation(gradleTestKit())` yourself. Neither 1.x nor 2.0.0 publishes TestKit as a
+  dependency, and the documentation now says so explicitly.
 - A task that the build didn't run is still a `null` subject, so `task(":x").toEqual(null)` and `notToBeInvoked()`
   behave as before.

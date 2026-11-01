@@ -11,7 +11,7 @@ deprecation warnings. Most test suites only need the dependency change, the impo
 | Java running your tests | 8 | 21 or newer (bytecode targets Java 21) |
 | Kotlin compiler in your build | 1.4 | 2.2 or newer (language and API version 2.2) |
 | Atrium | 0.15.0 | 1.3.0 (`atrium-core`, `atrium-logic`) |
-| Gradle TestKit | transitive from `fluent-en` | declared by you |
+| Gradle TestKit | declared by you | declared by you, unchanged |
 
 Your own build can use any Gradle version that runs your plugin tests on Java 21 or newer. 2.0.0 is tested with the
 TestKit of Gradle 8.14.6 and 9.8.2, running builds on the same Gradle versions. Other 8.x and 9.x versions aren't
@@ -23,8 +23,8 @@ compile classpath. With Gradle 9.8.2 that's Kotlin 2.4, so your Kotlin compiler 
 
 ## 2. Dependencies
 
-Replace the three 1.x artifacts with one. The library no longer brings TestKit along, because TestKit belongs to the
-Gradle distribution that runs your tests:
+Replace the three 1.x artifacts with one. As in 1.x, you declare TestKit yourself, because it belongs to the Gradle
+distribution that runs your tests. Neither version publishes it as a dependency:
 
 ```kotlin
 dependencies {
@@ -129,5 +129,4 @@ If you assert on the text of failure messages, adjust those assertions to the ne
 
 This only matters to contributors. The 1.x build used one root script with Spek 2, Dokka 1.4 and the Nexus plugins. 2.0.0 uses
 convention plugins in `build-logic`, Kotest, Dokka 2 and the Vanniktech Maven publish plugin, and it checks its
-public ABI against `library/api/library.api`. The published POM no longer lists TestKit at all, which is why section
-2 declares it.
+public ABI against `library/api/library.api`.
