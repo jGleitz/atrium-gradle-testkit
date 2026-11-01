@@ -9,13 +9,30 @@ The most important finding: the Proof-based redesign (`ProofContainer`, `_core`,
 
 ## Key Findings
 
+**Verified package-9 checkpoint (2026-10-31).** This branch uses Atrium 1.3.0 throughout, with String descriptions
+and `Text("invoked")` representations instead of this project's translation enums. The three publications and public
+function names remain until packages 11 and 10, respectively. All twelve resolved Atrium coordinates (including JVM
+variants) exist on Maven Central. Published JVM metadata requests Kotlin stdlib/reflect 2.0.21; `Expect` and `Text`
+carry Kotlin metadata 1.4.3 and Java 11 bytecode. These do not raise this project's Kotlin language/API 2.2 or JVM 21
+targets. Evidence, tagged 1.1/1.2/1.3 sources and release notes are in the control checkout's
+`.omo/evidence/major-release-modernization/9/`.
+
+**Verified package-10 checkpoint (2026-10-31).** The public API now follows the 1.x conventions, without deprecated
+aliases: `wasInvoked` became `toBeInvoked`, `wasNotInvoked` became `notToBeInvoked`, `wasSuccessful` became
+`toBeSuccessful`, `failed` became `toHaveFailed`, `wasUpToDate` became `toBeUpToDate`, `wasSkipped` became
+`toBeSkipped`, `usedCachedResult` became `toHaveBeenLoadedFromCache` and `hadNoSource` became `toHaveNoSource`. New are
+the generic `toHaveOutcome(TaskOutcome)` and the creator overload `task(path) { }`. All operations take a generic
+receiver (`<T : BuildResult>`, or `<T : BuildTask?>` with the definitely non-null `T & Any` after narrowing). The
+reported descriptions (`output`, `task '<path>'`, `was`/`was not` `invoked`, `outcome`) are unchanged. The callable
+reference compiler workaround `-Xno-optimized-callable-references` was removed; see the package-10 evidence.
+
 ### 1. What changed between 0.16 and 1.3 (relevant to extension authors)
 
 | Release | Change affecting extensions |
 |---|---|
-| 0.17.0 | Removed deprecated modules `atrium-core-robstoll`, `atrium-core-robstoll-lib` and `atrium-domain-builders` (including `ExpectBuilder`).\[3\] This is where `ExpectImpl` goes away. Removed `ReporterFactory`, `RawString` and `collectForDifferentSubject`. "we renamed core-api to core". The whole API was renamed to the `to + infinitive` schema; `assert`/`assertThat` verbs deprecated.\[3\]\[5\] |
-| 0.18.0 | Reporting aligned to `to + infinitive`, error messages now start with "I expected...". Deprecated `Description...Assertion` (use `Description...Expectation`), `DescriptionBasic.IS` (use `TO_BE`) and `IS_NOT` (use `NOT_TO_BE`). Removed `assert`/`assertThat`. Added `createAndAppend` overload taking `Translatable`. Recommended splitting API files into `XyExpectations.kt`, `XyFeatureExtractors.kt` and `XySubjectChangers.kt`.\[6\] Switched to JDK 11 bytecode; JDK 11 code "cannot be inlined into jdk1.6 or jdk1.8".\[3\] |
-| 1.0.0 | Moved to the current Kotlin Multiplatform plugin. "removed all deprecated function/classes/interfaces/translations etc. which were marked to be removed with 1.0.0 latest".\[3\] Also "we already removed en_GB from artifact names", e.g. `atrium-fluent-en_GB` became `atrium-fluent`.\[7\] A Spek→Kotest migration was tried and rolled back because Kotest broke kotlin-test on JS.\[2\]\[3\] |
+| 0.17.0 | Removed deprecated modules `atrium-core-robstoll`, `atrium-core-robstoll-lib` and `atrium-domain-builders` (including `ExpectBuilder`).\[3\] This is where `ExpectImpl` goes away. Removed `ReporterFactory`, `RawString` and `collectForDifferentSubject`. "we renamed core-api to core" (verified while migrating this project to 0.17.0: Maven Central has `atrium-core`, `atrium-logic` and `atrium-fluent-en_GB` at 0.17.0, but no `atrium-core-api`, `atrium-domain-builders` or `atrium-core-robstoll` at 0.17.0; the production `_logic` code of this project needed no change). The whole API was renamed to the `to + infinitive` schema; `assert`/`assertThat` verbs deprecated.\[3\]\[5\] |
+| 0.18.0 | Reporting aligned to `to + infinitive`, error messages now start with "I expected...". Deprecated `Description...Assertion` (use `Description...Expectation`), `DescriptionBasic.IS` (use `TO_BE`) and `IS_NOT` (use `NOT_TO_BE`). Removed `assert`/`assertThat`. Added `createAndAppend` overload taking `Translatable`. Recommended splitting API files into `XyExpectations.kt`, `XyFeatureExtractor.kt` and `XySubjectChangers.kt`.\[6\] Switched to JDK 11 bytecode; JDK 11 code "cannot be inlined into jdk1.6 or jdk1.8". Empty creators now report `at least one expectation defined` (verified in tagged `creating/impl/CollectingExpectImpl.kt` and `creating/ErrorMessages.kt`). This project keeps JVM 21, its module split and public names at this migration step. |
+| 1.0.0 | Moved to the current Kotlin Multiplatform plugin. "removed all deprecated function/classes/interfaces/translations etc. which were marked to be removed with 1.0.0 latest".\[3\] Also "we already removed en_GB from artifact names", e.g. `atrium-fluent-en_GB` became `atrium-fluent`.\[7\] (verified while migrating this project to 1.0.0: Maven Central has no `atrium-fluent-en_GB` at 1.0.0, only `atrium-fluent`; `atrium-core` and `atrium-logic` keep their names; package names keep `en_GB`; the production `_logic` code of this project and its subjectless test helper needed no change). A Spek→Kotest migration was tried and rolled back because Kotest broke kotlin-test on JS.\[2\]\[3\] |
 | 1.1.0 | Introduced `expectGrouped`/`group`. Dropped Kotlin 1.2. Deprecated the `kotlin_1_3` extension package (functions moved into the main package).\[3\] Renamed `charsequence.contains` packages to `charsequence.toContain` (binary break).\[3\] |
 | 1.2.0 | Added `toHoldThirdPartyExpectation` and `extractSubject`. Dropped Kotlin 1.3. JS now IR-only.\[8\] Deprecated all `atrium-translations-de_CH` enums.\[3\] |
 | 1.3.0 | Removed `translations_de_CH`. `AtriumError` now extends opentest4j's `AssertionFailedError` on the JVM, which gives the IntelliJ diff link. Updated kbox to 3.x. "testFactory as preparation to get rid of spek".\[1\] api-infix: "This was the last release". The Proof rewrite was postponed to 2.x.\[1\]\[3\] |
@@ -36,7 +53,7 @@ The most important finding: the Proof-based redesign (`ProofContainer`, `_core`,
 
 ### 2. API design conventions for expectation functions (fluent API)
 
-- **Naming:** use the `to + infinitive` schema (0.17), e.g. `toEqual`, `toBeLessThan`, `toContain`, `toHaveSize`, `toHaveElementsAndAll`, `notToContain`, `notToEqualNull`.\[2\]\[12\] For TestKit this means `wasSuccessful()`/`wasInvoked()`-style names should become something like `toHaveOutcome`, `toBeSuccessful` and `toHaveTask`. You can keep the old names as `@Deprecated(ReplaceWith(...))` aliases, which is the same mechanism Atrium uses for its own migrations.\[8\]
+- **Naming:** use the `to + infinitive` schema (0.17), e.g. `toEqual`, `toBeLessThan`, `toContain`, `toHaveSize`, `toHaveElementsAndAll`, `notToContain`, `notToEqualNull`.\[2\]\[12\] For TestKit this means `wasSuccessful()`/`wasInvoked()`-style names become `toHaveOutcome`, `toBeSuccessful` and `toBeInvoked`. Atrium keeps old names as `@Deprecated(ReplaceWith(...))` aliases for its own migrations;\[8\] this project's major release replaces them outright instead (see the package-10 checkpoint above).
 - **Feature-extractor naming:** shortcut properties are named after the feature, without the `get` prefix: `message`, `first`, `second`, `keys`, `values`, `size`. Safe-extraction functions are named after the operation (`get(index)`, `getExisting(key)`).\[4\]\[10\]
 - **Overload pairs:** feature extractors and narrowing functions always come in two overloads. One takes an `assertionCreator` lambda and returns the *original* `Expect<T>`. The other takes the same parameters minus the lambda and returns `Expect<R>`, changing the subject.\[4\]\[8\]\[13\] The README's composition example is the template:\[4\]
   ```kotlin
@@ -53,10 +70,10 @@ The most important finding: the Proof-based redesign (`ProofContainer`, `_core`,
 The Atrium repo's top level in 1.x is: `apis/` (`atrium-api-fluent`, `atrium-api-infix`), `atrium-core`, `logic/atrium-logic`, `translations/atrium-translations-en_GB`, `bundles/` (`atrium-fluent`, `atrium-infix`), `misc/` (verbs, specs, tools, readme-examples) and `samples/`. Bundles "bundle API, logic, core, translation as well as predefined expectation verbs".\[4\]\[11\] Files follow `apis/fluent/atrium-api-fluent/src/{commonMain,jvmMain}/kotlin/ch/tutteli/atrium/api/fluent/en_GB/xyExpectations.kt`, with logic implementations at `logic/atrium-logic/src/{commonMain,jvmMain}/kotlin/ch/tutteli/atrium/logic/impl/DefaultXyAssertions.kt`. All modules are Kotlin Multiplatform. With Kotlin ≥ 1.5 consumers use the unsuffixed artifact (e.g. `atrium-fluent`); `-jvm`/`-js` suffixes are only needed for older Kotlin.\[4\]\[11\] `main` already builds as `2.0.0-SNAPSHOT`.\[16\]
 
 **Recommended dependencies for a library like atrium-gradle-testkit** (my recommendation; Atrium does not publish a guide for this):
-- `api("ch.tutteli.atrium:atrium-api-fluent:1.3.0")`, because your public signatures expose `Expect<T>`.
+- `api("ch.tutteli.atrium:atrium-core:1.3.0")`, because `Expect<T>` is defined in core. Only add `atrium-api-fluent` when main code uses its functions.
 - `api` or `implementation` on `atrium-logic`, since `_logic` is needed for custom descriptions and safe extraction. The README examples import `ch.tutteli.atrium.logic._logic`.\[4\]\[17\]
 - Do **not** depend on the `atrium-fluent` bundle or `atrium-verbs` in `main`. Users bring their own verb, and the README even shows excluding `atrium-verbs` to define your own.\[4\]\[11\]
-- No Atrium BOM was found in the sources reviewed. Pin a single `atriumVersion`.
+- No Atrium BOM was found in the sources reviewed. Keep the cohort aligned with literal versions in the function-appropriate catalogs.
 - Drop `atrium-translations-*` once descriptions are `String`s.
 
 **Minimum versions for 1.3.0:** "Kotlin: 1.4, JVM: 11, JS: IR-Backend".\[4\]\[11\] Atrium itself builds with a newer compiler (1.1.0 used "kotlin 1.8.21 but api/languageLevel 1.4") and officially supports JDK 17.\[3\]
@@ -76,9 +93,9 @@ The Atrium repo's top level in 1.x is: `apis/` (`atrium-api-fluent`, `atrium-api
 
 ### 6. Reference implementations
 
-- **jGleitz/atrium-gradle-testkit** is the canonical third-party extension and is listed under "Third-party Extensions" in older Atrium READMEs.\[5\]\[30\] It is **still on Atrium 0.16.0**.\[25\] The modules are `apis/fluent-en`, `logic`, `translations/en` and `api-spec`, and the published `atrium-gradle-testkit-logic` 1.0.1 depends on `atrium-core-api` and `atrium-logic`.\[14\]\[31\] A Renovate PR (#171, open, last updated Oct 26, 2026) bumps `atrium-logic` and `atrium-specs` to 1.2.0 and `atrium-core-api` to 1.0.0. That bump will not compile as-is, because `atrium-core-api` was renamed to `atrium-core` in 0.17.\[2\] Its Sept 2026 modernisation steps (Kotest, Dokka 2, Gradle 9.7.1, `testkit` as an `api` dependency) are a reasonable model for build hygiene, but **it is not a 1.x reference implementation**.\[25\]\[29\]\[32\]
+- **jGleitz/atrium-gradle-testkit** is the canonical third-party extension and is listed under "Third-party Extensions" in older Atrium READMEs.\[5\]\[30\] It is **still on Atrium 0.16.0**.\[25\] The modules are `apis/fluent-en`, `logic`, `translations/en` and `api-spec`, and the published `atrium-gradle-testkit-logic` 1.0.1 depends on `atrium-core-api` and `atrium-logic`.\[14\]\[31\] A Renovate PR (#171, **closed as "autoclosed" on Oct 26, 2026** – verified Oct 27, 2026) had proposed bumping `atrium-logic` and `atrium-specs` to 1.2.0 and `atrium-core-api` to 1.0.0. That bump will not compile as-is, because `atrium-core-api` was renamed to `atrium-core` in 0.17.\[2\] Its Sept 2026 modernisation steps (Kotest, Dokka 2, Gradle 9.7.1 – the build has since moved to Gradle 9.8.2 – `testkit` as an `api` dependency) are a reasonable model for build hygiene, but **it is not a 1.x reference implementation**.\[25\]\[29\]\[32\]
 - **robstoll/niok** (by the Atrium author) uses `atrium-fluent` 1.3.0 for its tests (Renovate PR #272, merged Oct 22, 2026).\[9\] It is a consumer, not an extension.
-- I found no published third-party extension already ported to 1.x (no "atrium-ktor" or similar). The best 1.x reference is Atrium's own `api-fluent` + `atrium-logic` sources, e.g. `DefaultListAssertions` for safe `get` extraction, `DefaultFloatingPointAssertions` for explanatory assertions and hints, and `DefaultAnyAssertions` for reported subject changes. The README links all of these as templates.\[4\]
+- The verified 1.3 references are Atrium's own `api-fluent` + `atrium-logic` sources, e.g. `DefaultListAssertions` for safe `get` extraction and the tagged `subjectLessTestSetup` for absent-subject collection with `appendAsGroup` and `_logic.append`. The local helper follows that pattern, with explicit opt-ins to the component container and custom expectation builder APIs; it does not depend on atrium-specs.
 
 ## Details: Before (0.16) vs. After (1.3) Code
 
@@ -114,11 +131,9 @@ fun <T : BuildTask> Expect<T>.toHaveOutcome(expected: TaskOutcome): Expect<T> =
 fun <T : BuildTask> Expect<T>.toBeSuccessful(): Expect<T> =
     _logic.createAndAppend("to be", Text("successful")) { it.outcome == TaskOutcome.SUCCESS }
 
-@Deprecated("Use toBeSuccessful", ReplaceWith("toBeSuccessful()"))
-fun <T : BuildTask> Expect<T>.wasSuccessful(): Expect<T> = toBeSuccessful()
 ```
 
-This is the README's own pattern: `_logic.createAndAppend(description: String, representation, test)` "creates and appends the expectation" and returns `Expect<T>`.\[8\] `Text` is used "so that `"an even number"` is not treated as a `String` in reporting".\[4\] If you prefer to stay entirely on the API level, you can also compose existing functions: `feature(BuildTask::getOutcome) { toEqual(TaskOutcome.SUCCESS) }`.
+This project does not ship such aliases, and its `toHaveOutcome` keeps the existing `outcome` feature description instead of `to have outcome`. This is the README's own pattern: `_logic.createAndAppend(description: String, representation, test)` "creates and appends the expectation" and returns `Expect<T>`.\[8\] `Text` is used "so that `"an even number"` is not treated as a `String` in reporting".\[4\] If you prefer to stay entirely on the API level, you can also compose existing functions: `feature(BuildTask::getOutcome) { toEqual(TaskOutcome.SUCCESS) }`.
 
 ### (b) Feature extraction with both overloads
 
@@ -164,32 +179,27 @@ The extractor is a Java getter, so `feature(BuildResult::getOutput)` would repor
 ```
 
 ```kotlin
-// AFTER (1.3) — logic-level helper kept internal, API overloads delegate to it  (verify builder names)
-import ch.tutteli.atrium.core.None
-import ch.tutteli.atrium.core.Some
+// Verified 1.3 pattern for this library: a missing task is a present null, not failed extraction.
 import ch.tutteli.atrium.creating.AssertionContainer
 import ch.tutteli.atrium.logic._logic
-import ch.tutteli.atrium.logic.extractFeature
-import ch.tutteli.atrium.reporting.Text
+import ch.tutteli.atrium.logic.manualFeature
 
 internal fun <T : BuildResult> AssertionContainer<T>.task(path: String) =
-    extractFeature
-        .withDescription("task $path")
-        .withRepresentationForFailure(Text("❗❗ task was not part of the build"))
-        .withFeatureExtraction { result -> result.task(path)?.let { Some(it) } ?: None }
-        .withoutOptions()
-        .build()
+    manualFeature("task '$path'") { task(path) }
 
 /** @return The newly created [Expect] for the extracted feature. @since 2.0.0 */
-fun <T : BuildResult> Expect<T>.task(path: String): Expect<BuildTask> =
+fun <T : BuildResult> Expect<T>.task(path: String): Expect<BuildTask?> =
     _logic.task(path).transform()
 
 /** @return an [Expect] for the subject of `this` expectation. @since 2.0.0 */
-fun <T : BuildResult> Expect<T>.task(path: String, assertionCreator: Expect<BuildTask>.() -> Unit): Expect<T> =
+fun <T : BuildResult> Expect<T>.task(path: String, assertionCreator: Expect<BuildTask?>.() -> Unit): Expect<T> =
     _logic.task(path).collectAndAppend(assertionCreator)
 ```
 
-This mirrors what the README describes: "in case it is not always safe to call a method (e.g. `List.get`) … wrap it into an own feature extractor and use `_logic.extractFeature`",\[10\] with `DefaultListAssertions` as the template.\[4\]\[8\] The exact `Some`/`None` package and the `transform()`/`collectAndAppend()` step names are **(verify)** items; confirm them against `DefaultListAssertions.kt` in `logic/atrium-logic` at tag `v1.3.0`.
+The tagged `DefaultListAssertions.get` uses `extractFeature.methodCall`, `Option.someIf` and a failure representation
+because an out-of-bounds index cannot be extracted. `BuildResult.task`, in contrast, safely returns null for a missing
+task, so `manualFeature` preserves that present-null subject. The tagged fluent list API confirms `transform()` and
+`collectAndAppend()`. The paired task creator overload shown here is the package-10 destination, not part of package 9.
 
 **How the logic layer should be organised now.** In 0.16 an extension typically had a separate `logic` module with `AssertionContainer<T>.xy()` functions and an API module calling `_logicAppend { xy() }`.\[17\] That still works in 1.3, but Atrium says atrium-logic will be folded into core and removed "with 3.0.0 at the latest", and that `AssertionContainer`/`Assertion` will be renamed under the Proof rewrite in 2.x.\[1\] My recommendation:
 - Collapse the extension's separate `logic` and `translations` modules into the API module.
@@ -204,12 +214,12 @@ class BuildTaskExpectationsTest {
 
     @Test fun toHaveOutcome_fails_and_reports() {
         expect { expect(fakeTask(FAILED)).toHaveOutcome(SUCCESS) }
-            .toThrow<AssertionError> { messageToContain("to have outcome", "SUCCESS") }
+            .toThrow<AssertionError> { messageToContain("outcome:", "SUCCESS") }
     }
 
     @Test fun lambdaOverload_reportsSubExpectations_whenTaskMissing() {
         expect { expect(fakeResult()).task(":missing") { toBeSuccessful() } }
-            .toThrow<AssertionError> { messageToContain("task :missing", "to be", "successful") }
+            .toThrow<AssertionError> { messageToContain("task ':missing': null", "was", "invoked", "outcome", "SUCCESS") }
     }
 }
 ```
@@ -218,9 +228,9 @@ The third test replaces what `SubjectLessSpec` checked in 0.16. It verifies that
 
 ## Recommendations (migration plan)
 
-1. **Bump the toolchain first.** Kotlin ≥ 1.4 (in practice the same 2.x compiler you already use), JVM bytecode target ≥ 11, JDK 17 for building. Drop the Java 8 bytecode target, which atrium-gradle-testkit still preserves, because Atrium inline functions compiled for JDK 11 cannot be inlined into JDK 8 bytecode.\[3\]\[25\]\[29\]
+1. **Bump the toolchain first.** Kotlin ≥ 1.4 (in practice the same 2.x compiler you already use), JVM bytecode target ≥ 11. This project builds with launcher JDK 27 and a Java toolchain of 21 or newer (CI tests 21, 25 and 27). The Java 8 bytecode target is already gone: the current main targets Java 21 bytecode (a deliberate decision, commit `f9c25e0`), which also satisfies the constraint that Atrium inline functions compiled for JDK 11 cannot be inlined into JDK 8 bytecode.\[3\]\[25\]\[29\]
 2. **Fix the dependencies.** Replace `atrium-core-api` with `atrium-core` (or rely on it transitively), `atrium-api-fluent-en_GB` with `atrium-api-fluent`, keep `atrium-logic`, remove `atrium-specs` and all `atrium-translations-*`, and exclude any transitive Spek engine.
-3. **Migrate API names to `to + infinitive`**, keeping the old names as `@Deprecated(ReplaceWith)` shims for one release.
+3. **Migrate API names to `to + infinitive`**, keeping the old names as `@Deprecated(ReplaceWith)` shims for one release. *(Superseded: the owner-approved major-release plan ships no deprecated aliases; removed names are documented in the changelog instead.)*
 4. **Replace translation enums with `String` descriptions and `Text` representations.** Remove `RawString`, `Untranslatable` and `DescriptionBasic` usages. Fold the `translations` and `logic` modules into the API module, with internal helpers.
 5. **Use class-reference `feature(...)` or `String`-described `feature(...)`** for property-like features, and `_logic.extractFeature` for `task(path)`. Always provide both overloads.
 6. **Rewrite tests** as kotlin-test/JUnit 5 (or keep Kotest), adding `@sample`-referenced sample classes and `@since` tags.
@@ -241,7 +251,7 @@ The third test replaces what `SubjectLessSpec` checked in 0.16. It verifies that
 3. [Releases · robstoll/atrium](https://github.com/robstoll/atrium/releases)
 4. [GitHub - robstoll/atrium: A multiplatform expectation library for Kotlin](https://github.com/robstoll/atrium)
 5. [A multiplatform assertion library for Kotlin](https://androidrepo.com/repo/robstoll-atrium-android-test)
-6. [fix(deps): update atriumversion to v0.18.0 by renovate\[bot\] · Pull Request #173 · jGleitz/atrium-gradle-testkit · GitHub](https://github.com/jGleitz/atrium-gradle-testkit/pull/173)
+6. [Official Atrium v0.18.0 release notes](https://github.com/robstoll/atrium/releases/tag/v0.18.0); [tagged sources](https://github.com/robstoll/atrium/tree/v0.18.0)
 7. [Maven Repository: ch.tutteli.atrium » atrium-fluent-en\_GB](https://mvnrepository.com/artifact/ch.tutteli.atrium/atrium-fluent-en_GB)
 8. [GitHub - jGleitz/atrium: A multiplatform assertion library for Kotlin · GitHub](https://github.com/jGleitz/atrium)
 9. [Update dependency ch.tutteli.atrium:atrium-fluent to v1.3.0 by renovate\[bot\] · Pull Request #272 · robstoll/niok · GitHub](https://github.com/robstoll/niok/pull/272)

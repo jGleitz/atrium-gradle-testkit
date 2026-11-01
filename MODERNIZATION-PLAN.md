@@ -1,4 +1,61 @@
-# atrium-gradle-testkit Modernization Plan
+# atrium-gradle-testkit Modernization Progress
+
+> **Last updated**: 2026-10-27 (package 1)
+> **Base**: `origin/main` `c077c11`; baseline gate green (84 tests, 0 failures); latest public release 1.0.1.
+
+This file is the concise current index. The authoritative plan is the work plan named `major-release-modernization` (`.omo/plans/major-release-modernization.md` in the control checkout; `.omo/` is gitignored, so it is not part of the repository). Evidence for package N lives in `.omo/evidence/major-release-modernization/N/` of the control checkout `/home/josh/Projekte/atrium-gradle-testkit`, never in a task worktree. Everything after the "Historical appendix" heading is history and must not be used as instructions.
+
+## Current state (main `c077c11`, verified 2026-10-27)
+
+| Component | Value |
+|-----------|-------|
+| Gradle | 9.8.2 (wrapper) |
+| Gradle launcher JDK | Temurin 27 (`mise.toml`; also Temurin 25/21 and Gradle 9.8.2/8.14.6, Node 24 are provisioned there) |
+| JDK toolchain for compile/test | `javaVersion` property, default 21; CI tests 21, 25 and 27 |
+| Bytecode target | Java 21 (`javaReleaseVersion`, deliberate decision in commit `f9c25e0`; do not revert to 17) |
+| Kotlin language/API version | 2.2 (`kotlinReleaseVersion`) |
+| Kotlin compiler (KGP) | 2.4.21 |
+| Test framework | Kotest 6.2.6 (shared `api-spec` suites run through `apis:fluent-en`) |
+| Atrium | 0.16.0 (upgrade is packages 6-10) |
+| Dokka / Vanniktech publish | 2.2.0 / 0.37.0 |
+| Public releases | 1.0.1 (Maven Central `de.joshuagleitze:atrium-gradle-testkit-{fluent-en,logic,translation-en}`, GitHub v1.0.1) |
+| Modules | `api-spec`, `apis:fluent-en`, `logic`, `translations:en`, `example-project` (included build `build-logic`) |
+
+## Package progress (27 packages, see the work plan for scope and dependencies)
+
+| Package | Status |
+|---------|--------|
+| 1. Reconcile baseline and modernization records | **done** - merged in #185 (`62e2091`); evidence in `1/` |
+| 2. Fail closed on every remote publication path | **done** - merged in #192 (`045a1d9`); evidence in `2/` |
+| 3. Make real task-outcome fixtures deterministic | **done** - merged in #190 (`a12688f`); evidence in `3/` |
+| 4. Remove Atrium test-helper coupling under Kotest | **in progress** - PR #193 awaiting merge; evidence in `4/` |
+| 5. Add metadata-only conventional PR title validation | **done** - merged in #188 (`5713c01`); evidence in `5/` |
+| 6. Migrate Atrium dependency cohort to 0.17 | **in progress** - commit `build: migrate Atrium to 0.17` awaiting review/merge; evidence in `6/` |
+| 7. Migrate Atrium cohort to JVM-11-era 0.18 | **in progress** - commit `build: migrate Atrium to 0.18` awaiting review/merge; evidence in `7/` |
+| 8. Migrate Atrium cohort across the 1.0 boundary | **in progress** - commit `build: migrate Atrium to 1.0` awaiting review/merge; evidence in `8/` |
+| 9. Complete migration to stable Atrium 1.3 | **in progress** - commit `build: migrate Atrium to 1.3` awaiting review/merge; evidence in `9/` |
+| 10. Introduce the clean idiomatic v2 expectation API | **done** - merged in #199 (`0c0a8b4`); evidence in `10/` |
+| 11. Consolidate the library into one neutral publication | **done** - merged in #200 (`c61a298`); evidence in `11/` |
+| 12. Stage and consume the actual publication locally | **in progress** - verified; awaiting merge; evidence in `12/` |
+| 13. Commit and enforce the v2 public ABI reference | **done** - merged in #201 (`aa7a6f6`); evidence in `13/` |
+| 14. Run one shared suite under both TestKit clients | **in progress** - awaiting review/merge; evidence in `14/` |
+| 15. Verify minimum and current Kotlin consumers | **in progress** |
+| 16. Gate production coverage independently per runtime | not started |
+| 17. Add explicit compiler and TestKit CI lanes | not started |
+| 18. Replace Surefire reporting with complete artifact reports | not started |
+| 19. Submit the trusted main dependency graph | **done** - merged in #202 (`fa7886d`); evidence in `19/` |
+| 20. Publishable docs with executable migration samples | **in progress** |
+| 21. Write the major changelog and migration guide | not started |
+| 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
+| 23-27 | not started |
+
+Update this table, with the immutable merge SHA and evidence location, in every package.
+
+---
+
+# Historical appendix (state of 2026-09-17, superseded)
+
+> Everything below describes the earlier Gradle 9.7.1 / Java 17 / Kotlin 2.4.20 / Temurin 26 modernization and was **not** updated. It mentions removed or replaced things (`.sdkmanrc`, Java 17 minimum, `/tmp` worktrees, PR #168 follow-up). Use it for history only; current facts are above.
 
 > **Coordinator**: Sisyphus (AI)
 > **Last Updated**: 2026-09-17

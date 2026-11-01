@@ -10,4 +10,21 @@
   */
   $schema: "https://docs.renovatebot.com/renovate-schema.json",
   extends: ["github>jGleitz/renovate-config:default.json5"],
+  packageRules: [
+    {
+      /* Preset v10 needs conventional-changelog-writer@9, but pinned @semantic-release/release-notes-generator 14.x
+         depends on writer ^8, so release-notes generation fails, as seen in closed PR #191. Remove once a stable
+         @semantic-release/release-notes-generator release depending on conventional-changelog-writer ^9 is pinned in
+         .github/release/package.json; this lets Renovate offer preset v10 again, and release-rule tests in .github/release
+         must pass with it. */
+      matchPackageNames: ["conventional-changelog-conventionalcommits"],
+      allowedVersions: "<10",
+    },
+    {
+      /* The pinned release tooling in .github/release is never part of the published library, so its updates must not
+         release. The inherited configuration types npm `dependencies` as `fix`, which would release a patch. */
+      matchFileNames: [".github/release/package.json"],
+      semanticCommitType: "chore",
+    },
+  ],
 }

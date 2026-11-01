@@ -5,10 +5,10 @@ plugins {
 }
 
 val githubRepository = providers.gradleProperty("github.repository")
-val atriumVersion = versionCatalogs.named("libs").findLibrary("atrium-core-api").get().get().version
+val atriumVersion = versionCatalogs.named("libs").findLibrary("atrium-core").get().get().version
 
 dokka {
-	val gitRef = if (status == "release") "v$version" else "main"
+	val gitRef = providers.gradleProperty("releaseTag").orElse("main").get()
 	val projectPath = projectDir.relativeTo(rootDir).invariantSeparatorsPath
 	val projectSourceUrl = githubRepository.map { java.net.URI("https://github.com/$it/blob/$gitRef/$projectPath") }
 
@@ -24,7 +24,7 @@ dokka {
 			packageListUrl("https://docs.gradle.org/current/javadoc/element-list")
 		}
 		externalDocumentationLinks.register("atrium") {
-			url("https://docs.atriumlib.org/$atriumVersion/doc/")
+			url("https://docs.atriumlib.org/$atriumVersion/kdoc/")
 		}
 	}
 }

@@ -1,9 +1,9 @@
-import ch.tutteli.atrium.api.fluent.en_GB.contains
+import ch.tutteli.atrium.api.fluent.en_GB.toContain
 import ch.tutteli.atrium.api.verbs.expect
 import de.joshuagleitze.test.gradle.output
 import de.joshuagleitze.test.gradle.task
-import de.joshuagleitze.test.gradle.wasInvoked
-import de.joshuagleitze.test.gradle.wasSuccessful
+import de.joshuagleitze.test.gradle.toBeInvoked
+import de.joshuagleitze.test.gradle.toBeSuccessful
 import io.kotest.core.spec.style.FunSpec
 import org.gradle.testkit.runner.GradleRunner
 import java.nio.file.Files
@@ -77,9 +77,9 @@ class KotlinPluginSpec : FunSpec({
                 .build()
 
             expect(runResult) {
-                task(":compileKotlin").wasSuccessful()
-                task(":classes").wasInvoked()
-                output.contains("Hello World!")
+                task(":compileKotlin").toBeSuccessful()
+                task(":classes").toBeInvoked()
+                output.toContain("Hello World!")
             }
         }
     }
