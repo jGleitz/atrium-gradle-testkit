@@ -9,3 +9,4 @@ build/
 ### Agent tooling (opencode/omo session files, not for VCS)
 /.omo/
 /.codegraph/
+
