@@ -38,8 +38,8 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 11. Consolidate the library into one neutral publication | **done** - merged in #200 (`c61a298`); evidence in `11/` |
 | 12. Stage and consume the actual publication locally | **done** - merged in #203 (`7f43a15`); evidence in `12/` |
 | 13. Commit and enforce the v2 public ABI reference | **done** - merged in #201 (`aa7a6f6`); evidence in `13/` |
-| 14. Run one shared suite under both TestKit clients | **in progress** |
-| 15. Verify minimum and current Kotlin consumers | **in progress** |
+| 14. Run one shared suite under both TestKit clients | **done** - merged in #204 (`f9ac1d7`); evidence in `14/` |
+| 15. Verify minimum and current Kotlin consumers | **in progress** - awaiting review/merge; evidence in `15/` |
 | 16. Gate production coverage independently per runtime | not started |
 | 17. Add explicit compiler and TestKit CI lanes | not started |
 | 18. Replace Surefire reporting with complete artifact reports | not started |
