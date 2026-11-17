@@ -14,7 +14,7 @@ deprecation warnings. Most test suites only need the dependency change, the impo
 | Gradle TestKit | declared by you | declared by you, unchanged |
 
 Your own build can use any Gradle version that runs your plugin tests on Java 21 or newer. 2.0.0 is tested with the
-TestKit of Gradle 8.14.6 and 9.8.2, running builds on the same Gradle versions. Other 8.x and 9.x versions aren't
+TestKit of Gradle 8.14.6 and 9.9.0, running builds on the same Gradle versions. Other 8.x and 9.x versions aren't
 tested, so treat them as likely to work but unverified. The Gradle version that builds this repository itself (see
 [README.md](./README.md#compatibility)) doesn't restrict yours.
 
