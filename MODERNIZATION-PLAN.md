@@ -40,7 +40,7 @@ This file is the concise current index. The authoritative plan is the work plan 
 | 13. Commit and enforce the v2 public ABI reference | **done** - merged in #201 (`aa7a6f6`); evidence in `13/` |
 | 14. Run one shared suite under both TestKit clients | **done** - merged in #204 (`f9ac1d7`); evidence in `14/` |
 | 15. Verify minimum and current Kotlin consumers | **in progress** - awaiting review/merge; evidence in `15/` |
-| 16. Gate production coverage independently per runtime | not started |
+| 16. Gate production coverage independently per runtime | **in progress** - each runtime row's `check` requires zero missed instructions and branches of the staged JAR; awaiting review/merge; evidence in `16/` |
 | 17. Add explicit compiler and TestKit CI lanes | not started |
 | 18. Replace Surefire reporting with complete artifact reports | not started |
 | 19. Submit the trusted main dependency graph | **done** - merged in #202 (`fa7886d`); evidence in `19/` |
