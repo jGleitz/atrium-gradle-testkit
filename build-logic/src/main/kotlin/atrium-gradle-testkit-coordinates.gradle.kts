@@ -17,4 +17,6 @@ require(releaseTag == null || (
 	"The Gradle property 'releaseTag' must match 'v<version>' with a stable artifact version, but is '$releaseTag'."
 }
 version = requestedVersion ?: "local"
-status = if (releaseTag != null) "release" else "snapshot"
+// Only a release tag, which was validated above, makes a release. Every other build is unreleased, which Gradle's default
+// status scheme calls "integration". The publishing convention writes this status into the published module metadata.
+status = if (releaseTag != null) "release" else "integration"
