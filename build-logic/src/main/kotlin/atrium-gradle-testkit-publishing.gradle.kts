@@ -1,7 +1,6 @@
 import com.vanniktech.maven.publish.DeploymentValidation
 import org.gradle.api.internal.attributes.AttributesFactory
 import org.gradle.api.internal.project.ProjectInternal
-import org.gradle.api.publish.PublicationArtifact
 import org.gradle.api.publish.internal.PublicationInternal
 import org.gradle.plugins.signing.Sign
 
@@ -91,21 +90,19 @@ tasks.withType<Sign>().configureEach {
 }
 
 // Gradle derives the `org.gradle.status` of the module metadata from the artifact version, so it would call every
-// build that does not end in SNAPSHOT a release. The release identity decides instead: see StatusOverridingPublication.
-// The coordinates convention only accepts a release tag that matches the stable version, so any tag means a release.
+// build that does not end in SNAPSHOT a release. The status set by the coordinates convention decides instead: see
+// StatusOverridingPublication.
 // The hook is registered after the publications are wired, because MavenPublishPlugin fills the metadata task's
 // publication property when the publication is created.
 val moduleStatusAttributes = run {
 	val statusAttribute = Attribute.of("org.gradle.status", String::class.java)
 	val attributesFactory = (project as ProjectInternal).services.get(AttributesFactory::class.java)
-	val releaseStatus = attributesFactory.of(statusAttribute, "release")
-	val unreleasedStatus = attributesFactory.of(statusAttribute, "integration")
-	providers.gradleProperty("releaseTag").map { releaseStatus }.orElse(unreleasedStatus)
+	attributesFactory.of(statusAttribute, project.status.toString())
 }
 afterEvaluate {
 	tasks.withType<GenerateModuleMetadata>().configureEach {
 		val original = publication.get() as PublicationInternal<*>
-		publication.set(moduleStatusAttributes.map { StatusOverridingPublication(original, it) })
+		publication.set(StatusOverridingPublication(original, moduleStatusAttributes))
 	}
 }
 
