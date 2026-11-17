@@ -19,7 +19,7 @@ tested, so treat them as likely to work but unverified. The Gradle version that 
 [README.md](./README.md#compatibility)) doesn't restrict yours.
 
 The `gradleTestKit()` dependency of Gradle 9 adds the Kotlin standard library that ships with Gradle to your test
-compile classpath. With Gradle 9.8.2 that's Kotlin 2.4, so your Kotlin compiler has to be able to read that version.
+compile classpath. With Gradle 9.9.0 that's Kotlin 2.4, so your Kotlin compiler has to be able to read that version.
 
 ## 2. Dependencies
 
