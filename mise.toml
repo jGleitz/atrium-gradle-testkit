@@ -1,4 +1,4 @@
 [tools]
 java = ["temurin-27", "temurin-25", "temurin-21"]
 gradle = ["9.9.0", "8.14.6"]
-node = "26"
+node = "v26.13.1"
