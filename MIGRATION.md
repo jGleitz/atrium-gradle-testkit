@@ -14,12 +14,14 @@ deprecation warnings. Most test suites only need the dependency change, the impo
 | Gradle TestKit | declared by you | declared by you, unchanged |
 
 Your own build can use any Gradle version that runs your plugin tests on Java 21 or newer. 2.0.0 is tested with the
-TestKit of Gradle 8.14.6 and 9.9.0, running builds on the same Gradle versions. Other 8.x and 9.x versions aren't
-tested, so treat them as likely to work but unverified. The Gradle version that builds this repository itself (see
+TestKit of Gradle 8.14 and Gradle 9.9, running builds on the same Gradle versions. The exact patch releases are the ones
+pinned in this repository's `mise.toml`. Other 8.x and 9.x versions aren't tested, so treat them as likely to work but
+unverified. The Gradle version that builds this repository itself (see
 [README.md](./README.md#compatibility)) doesn't restrict yours.
 
-The `gradleTestKit()` dependency of Gradle 9 adds the Kotlin standard library that ships with Gradle to your test
-compile classpath. With Gradle 9.9.0 that's Kotlin 2.4, so your Kotlin compiler has to be able to read that version.
+The `gradleTestKit()` dependency of Gradle 9 adds the Kotlin standard library, `gradle-api` and `kotlin-reflect` that
+ship with Gradle to your test compile classpath. With Gradle 9.9 these carry Kotlin 2.4 metadata, so your Kotlin
+compiler has to be able to read that version.
 
 ## 2. Dependencies
 
