@@ -50,7 +50,8 @@ This table records the starting point of the modernization; it is not kept curre
 | 20. Publishable docs with executable migration samples | **done** - merged in #210 (`eb47e7d`); evidence in `20/` |
 | 21. Write the major changelog and migration guide | **in progress** - `CHANGELOG.md` and `MIGRATION.md` awaiting review/merge; evidence in `21/` |
 | 22. Align conventional release rules and Renovate commits | **done** - merged in #189 (`4affbbc`); evidence in `22/` |
-| 23-27 | not started |
+| 23. Restore the protected manual first-v2 release workflow | **in progress** - implemented and locally verified; PR review/merge pending. Manual protected workflow and package-25 candidate/recovery contract in `.github/release/README.md`; evidence in `23/bootstrap-rehearsal.json`, `23/bootstrap-negative.log` and `23/settings-no-secrets.json`. No production publication or settings changes; package 26 owns live authorization. |
+| 24-27 | not started |
 
 Update this table, with the immutable merge SHA and evidence location, in every package.
 

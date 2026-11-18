@@ -1,0 +1,152 @@
+name: Bootstrap Release
+run-name: Bootstrap ${{ inputs.release_tag }} at ${{ inputs.commit_sha }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Exact existing stable release tag (v2.0.0)
+        type: string
+        required: true
+      commit_sha:
+        description: Full main commit SHA approved for this release
+        type: string
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: atrium-gradle-testkit-release
+  cancel-in-progress: false
+
+env:
+  RELEASE_TAG: ${{ inputs.release_tag }}
+  RELEASE_SHA: ${{ inputs.commit_sha }}
+
+jobs:
+  preflight:
+    name: Validate Release Candidate
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      tag_object: ${{ steps.validate.outputs.tag_object }}
+      ci_run: ${{ steps.validate.outputs.ci_run }}
+      manifest_hash: ${{ steps.validate.outputs.manifest_hash }}
+    steps:
+      - name: Checkout Trusted Release Tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set Up Tools
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - name: Validate Tag, Main, CI and Candidate Evidence
+        id: validate
+        run: timeout --foreground 1800 mise exec -- node .github/release/bootstrap.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  publish:
+    name: Publish Approved Bootstrap
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    # Configure owner review (allow self-review), main-only deployment and secrets separately in package 26.
+    environment: release-bootstrap
+    permissions:
+      contents: write
+      actions: read
+      packages: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout Trusted Release Tools
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set Up Tools
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+      - name: Revalidate Immutable Approval
+        run: timeout --foreground 1800 mise exec -- node .github/release/bootstrap.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_TAG_OBJECT: ${{ needs.preflight.outputs.tag_object }}
+          EXPECTED_CI_RUN: ${{ needs.preflight.outputs.ci_run }}
+          EXPECTED_MANIFEST_HASH: ${{ needs.preflight.outputs.manifest_hash }}
+      - name: Check All Credentials Before Any External Write
+        run: timeout --foreground 1800 mise exec -- node --input-type=module -e 'import {verifySecrets} from "./.github/release/recovery.mjs"; verifySecrets(process.env)'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          PACKAGE_SIGNING_KEY: ${{ secrets.PACKAGE_SIGNING_KEY }}
+          PACKAGE_SIGNING_KEY_PASSWORD: ${{ secrets.PACKAGE_SIGNING_KEY_PASSWORD }}
+      - name: Checkout Exact Candidate
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.commit_sha }}
+          path: release-source
+          persist-credentials: false
+      - name: Rebuild and Stage Candidate Without Publication Approval
+        working-directory: release-source
+        env:
+          RELEASE_VERSION: ${{ needs.preflight.outputs.version }}
+        run: |
+          timeout --foreground 1800 mise exec -- ./gradlew build :library:checkKotlinAbi \
+            :library:publishAllPublicationsToVerificationRepository :library:dokkaGeneratePublicationHtml \
+            :library:writeGithubPackagesRepositoryUrl \
+            "-Pversion=$RELEASE_VERSION" "-PreleaseTag=$RELEASE_TAG" \
+            -PremotePublicationApproved=false \
+            --no-build-cache --no-configuration-cache --warning-mode all --console=plain
+      - name: Reconcile Destination State Before Publishing
+        id: recovery
+        working-directory: release-source
+        run: timeout --foreground 1800 mise exec -- node ../.github/release/recovery.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          PACKAGE_SIGNING_KEY: ${{ secrets.PACKAGE_SIGNING_KEY }}
+          PACKAGE_SIGNING_KEY_PASSWORD: ${{ secrets.PACKAGE_SIGNING_KEY_PASSWORD }}
+      - name: Publish Maven artifacts
+        working-directory: release-source
+        env:
+          RELEASE_VERSION: ${{ needs.preflight.outputs.version }}
+          PUBLISH_CENTRAL: ${{ steps.recovery.outputs.central }}
+          PUBLISH_PACKAGES: ${{ steps.recovery.outputs.packages }}
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.PACKAGE_SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.PACKAGE_SIGNING_KEY_PASSWORD }}
+          ORG_GRADLE_PROJECT_githubPackagesUsername: ${{ github.actor }}
+          ORG_GRADLE_PROJECT_githubPackagesPassword: ${{ github.token }}
+        run: |
+          if [ "$PUBLISH_CENTRAL" = true ]; then
+            timeout --foreground 1800 mise exec -- ./gradlew :library:publishAndReleaseToMavenCentral \
+              "-Pversion=$RELEASE_VERSION" "-PreleaseTag=$RELEASE_TAG" -PremotePublicationApproved=true \
+              --no-configuration-cache --warning-mode all --console=plain
+          fi
+          # A separate invocation waits for Central's end-of-build PUBLISHED validation before starting Packages.
+          if [ "$PUBLISH_PACKAGES" = true ]; then
+            timeout --foreground 1800 mise exec -- ./gradlew :library:publishAllPublicationsToGithubPackagesRepository \
+              "-Pversion=$RELEASE_VERSION" "-PreleaseTag=$RELEASE_TAG" -PremotePublicationApproved=true \
+              --no-configuration-cache --warning-mode all --console=plain
+          fi
+      - name: Create GitHub Release With Reviewed Notes
+        if: steps.recovery.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          timeout --foreground 1800 mise exec -- gh release create "$RELEASE_TAG" --verify-tag \
+            --target "$RELEASE_SHA" --title "$RELEASE_TAG" \
+            --notes-file "$RUNNER_TEMP/bootstrap-candidate/release-notes.md"
+      - name: Package Pages Site
+        uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4.0.0
+        with:
+          path: release-source/library/build/dokka/html
+      - name: Deploy Pages Site
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

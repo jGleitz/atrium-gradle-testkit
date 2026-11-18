@@ -12,6 +12,11 @@ plugins {
 
 val githubRepository = providers.gradleProperty("github.repository").get()
 
+// GitHub Packages does not support uppercase letters in the repository owner, even if the account name contains them
+val githubPackagesRepositoryUrl = githubRepository.substringBefore('/').lowercase().let { owner ->
+	"https://maven.pkg.github.com/$owner/${githubRepository.substringAfter('/')}"
+}
+
 // Publishing to a remote repository must be authorized explicitly. Approval alone is not enough: the exact stable
 // version and its release tag must match, too. Only Gradle properties without secrets are read here, so that ordinary
 // builds never touch credentials. The result is fixed during configuration, so it is part of the configuration cache
@@ -114,13 +119,27 @@ publishing {
 		}
 		maven {
 			name = "githubPackages"
-			url = uri("https://maven.pkg.github.com/$githubRepository")
+			url = uri(githubPackagesRepositoryUrl)
 			// Gradle resolves the credentials of every repository in the task graph before it runs any task. Requiring
 			// them only when authorized keeps the guard the first failure instead of a missing-credentials report.
 			if (remotePublicationDenial == null) {
 				credentials(PasswordCredentials::class)
 			}
 		}
+	}
+}
+
+// The release workflow reads the state of GitHub Packages before publishing. It reads the URL that publication uses.
+tasks.register("writeGithubPackagesRepositoryUrl") {
+	group = "publishing"
+	description = "Writes the URL of the GitHub Packages repository for release tooling outside of Gradle."
+
+	val url = githubPackagesRepositoryUrl
+	val output = rootProject.layout.buildDirectory.file("release/github-packages-repository-url")
+	inputs.property("url", url)
+	outputs.file(output)
+	doLast {
+		output.get().asFile.writeText(url)
 	}
 }
 
