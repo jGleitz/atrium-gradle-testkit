@@ -44,7 +44,7 @@ This table records the starting point of the modernization; it is not kept curre
 | 14. Run one shared suite under both TestKit clients | **done** - merged in #204 (`f9ac1d7`); evidence in `14/` |
 | 15. Verify minimum and current Kotlin consumers | **done** - merged in #206 (`3b5e08f`); evidence in `15/` |
 | 16. Gate production coverage independently per runtime | **in progress** - each runtime row's `check` (Gradle 8 and Gradle 9 TestKit) requires zero missed instructions and branches of the staged JAR; awaiting review/merge; evidence in `16/` |
-| 17. Add explicit compiler and TestKit CI lanes | **in review** - PR #213; implementation `fb65706`, CI run `44232997444` passed all host/ABI/runtime/Kotlin lanes and the XML/provenance aggregate; evidence in `17/`. Existing Build (21/25/27) requirements preserved; adding the aggregate requires owner approval (`17/protection-proposal.md`). Runtime `check` picks up package 16 coverage after its merge and the orchestrated rebase. |
+| 17. Add explicit compiler and TestKit CI lanes | **in review** - PR #213; the latest head's CI run passed every host/ABI/runtime/Kotlin lane and the XML/provenance aggregate (run, SHA and per-lane test counts in `17/ci-run.json`). Existing Build (21/25/27) requirements preserved; making `Compatibility verified` required needs owner approval (`17/protection-proposal.md`). Runtime `check` picks up package 16 coverage after its merge and the orchestrated rebase. |
 | 18. Replace Surefire reporting with complete artifact reports | not started |
 | 19. Submit the trusted main dependency graph | **done** - merged in #202 (`fa7886d`); evidence in `19/` |
 | 20. Publishable docs with executable migration samples | **done** - merged in #210 (`eb47e7d`); evidence in `20/` |

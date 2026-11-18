@@ -97,6 +97,7 @@ def validate(directory: Path, sha: str, needs: dict[str, dict[str, str]]) -> lis
     results = []
     for lane in expected_lanes():
         artifact = directory / f"results-{lane}-{sha}"
+        require((artifact / "result.json").is_file(), f"{lane}: missing result artifact {artifact.name}")
         receipt = json.loads((artifact / "result.json").read_text())
         require(receipt["sourceSha"] == sha and receipt["lane"] == lane, f"{lane}: stale result")
         if lane == "abi":

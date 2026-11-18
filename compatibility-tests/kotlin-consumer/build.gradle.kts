@@ -1,6 +1,7 @@
 import java.security.MessageDigest
 import javax.inject.Inject
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
+import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 
 plugins {
 	id("org.jetbrains.kotlin.jvm")
@@ -127,7 +128,8 @@ tasks.register<VerifyConsumer>("verifyConsumer") {
 	description = "Compiles and runs the consumer probe and verifies that it consumed the staged library successfully."
 	group = LifecycleBasePlugin.VERIFICATION_GROUP
 	dependsOn(tasks.compileKotlin)
-	compilerVersion = providers.gradleProperty("consumerKotlinVersion")
+	// The applied plugin's own version, so that the result proves which compiler actually ran.
+	compilerVersion = getKotlinPluginVersion()
 	distributionVersion = gradle.gradleVersion
 	resultXml = layout.buildDirectory.file("test-results/verifyConsumer/TEST-consumer.xml")
 	probeOutput = runConsumerProbe.flatMap { it.probeOutput }
