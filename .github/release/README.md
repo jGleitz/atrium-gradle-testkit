@@ -83,3 +83,48 @@ a release automatically. GitHub API errors and timeouts fail closed; only HTTP 4
 
 Local checks: `mise exec -- npm test` in this directory runs the preflight and recovery fixtures with the release-rule
 tests. They do not validate the live Portal, credentials or the production signing identity.
+
+## Release tooling dependencies
+
+Private, unpublished npm package that pins the semantic-release tooling used for automatic releases (configuration:
+`.releaserc.yaml` in the repository root) and holds the tests of the release rules.
+
+```sh
+mise exec node@24 -- npm ci --prefix .github/release
+mise exec node@24 -- npm --prefix .github/release test
+```
+
+Direct dependencies are pinned to exact versions in `package.json`, everything else by `package-lock.json`. Renovate
+updates both.
+
+### Overrides
+
+None. Findings with a fixed release inside the pinned majors are resolved by the lockfile alone: the `npm` that
+`@semantic-release/npm` depends on is locked at the newest 11.x release (its range is `^11.6.2`), which fixed the
+`undici` and `ip-address` advisories.
+
+Add an `overrides` entry only together with a note in this section that says why it exists and when to remove it.
+`package.json` cannot hold comments.
+
+### Known `npm audit` findings
+
+`npm --prefix .github/release audit` reports 41 findings (10 high, 31 moderate). They stem from the three advisories
+below, which have no usable fix. Nothing is suppressed. All findings are development dependencies of the release job; none
+ships in the published library.
+
+The release run does execute picomatch, but none of the findings is exploitable through the configured release inputs:
+
+- picomatch runs during branch matching and commit analysis, but it only ever compiles the fixed patterns from
+  `.releaserc.yaml` (`feat`, `fix`, `deps`, `perf`, `main`), which is reviewed repository content. Commit messages, branch
+  names and tags are matched as input, never compiled as patterns. `@semantic-release/github` is configured without
+  `assets`, so it globs nothing.
+- minimatch and glob only exist inside npm, a dependency of the unused `@semantic-release/npm` plugin, which bundles
+  them. `.releaserc.yaml` lists its plugins explicitly, so that plugin is not loaded and npm is never executed.
+
+| Advisory | Where | Why it cannot be fixed now | Remove when |
+| --- | --- | --- | --- |
+| [GHSA-fc5q-39xc-vjpf](https://github.com/advisories/GHSA-fc5q-39xc-vjpf), picomatch ReDoS, `<=4.0.7` (high) | `picomatch` 2.3.2 via `micromatch` (semantic-release, commit-analyzer); 4.0.7 via `tinyglobby` (`@semantic-release/github`); bundled copies in `npm`. Raises `micromatch`, `tinyglobby`, `fdir`, `node-gyp`, `@npmcli/run-script`, `npm`, `@semantic-release/*` and `semantic-release` itself | Every picomatch release, including the newest (4.0.7), is affected. npm's suggested fix downgrades semantic-release to 15.x. | A picomatch release above 4.0.7 exists and the dependents accept it; then `npm update` clears it. |
+| [GHSA-g3hv-75wg-m249](https://github.com/advisories/GHSA-g3hv-75wg-m249), minimatch DoS, `>=7.0.0 <11.0.1` (moderate) | `minimatch` 10.2.5 bundled in `npm`, and every npm package that depends on it (`@npmcli/*`, `libnpm*`, `cacache`, `pacote`, `sigstore`, ...) | The fix is minimatch 11, a major above what the bundled npm 11.21.3 uses. Dependencies bundled in the npm tarball ignore `overrides`. | A release of `npm` 11.x bundles minimatch >=11.0.1 and `npm update npm` picks it up. |
+| [GHSA-3g3m-2fjr-6pw4](https://github.com/advisories/GHSA-3g3m-2fjr-6pw4), glob AbortSignal bypass, `>=9.0.0 <=14.0.1` (moderate) | `glob` 13.0.6 bundled in `npm` | Same as minimatch: the fix is glob >=14.0.2 and cannot be overridden inside the bundle. | A release of `npm` 11.x bundles glob >=14.0.2. |
+
+Check these conditions when updating the tooling. `npm audit` itself lists them again once they are fixed.
