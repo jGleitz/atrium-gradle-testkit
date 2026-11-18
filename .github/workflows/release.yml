@@ -43,7 +43,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set Up Tools
-        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
       - name: Validate Tag, Main, CI and Candidate Evidence
         id: validate
         run: timeout --foreground 1800 mise exec -- node .github/release/bootstrap.mjs
@@ -69,7 +69,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Set Up Tools
-        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
       - name: Revalidate Immutable Approval
         run: timeout --foreground 1800 mise exec -- node .github/release/bootstrap.mjs
         env:
