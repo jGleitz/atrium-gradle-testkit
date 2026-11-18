@@ -5,13 +5,39 @@ on:
     branches: [ main, renovate/** ]
   pull_request:
 
+permissions:
+  contents: read
+
+env:
+  STAGED_VERSION: 2.0.0-dev
+
+defaults:
+  run:
+    shell: bash
+
 jobs:
+  versions:
+    name: Compatibility versions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      gradle: ${{ steps.matrix.outputs.gradle }}
+      kotlin: ${{ steps.matrix.outputs.kotlin }}
+      consumer-gradle: ${{ steps.matrix.outputs.consumer-gradle }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: matrix
+        run: python3 .github/scripts/ci_results.py matrix >> "$GITHUB_OUTPUT"
+
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      checks: write # scacap/action-surefire-report creates the failure check run
     strategy:
       matrix:
-        # TODO also test against the latest Kotlin version
         java-version: [ 21, 25, 27 ]
       fail-fast: false
     steps:
@@ -26,9 +52,39 @@ jobs:
           build-scan-terms-of-use-url: "https://gradle.com/terms-of-service"
           build-scan-terms-of-use-agree: "yes"
       - name: Build
-        run: ./gradlew build --continue --scan
+        run: mise exec -- ./gradlew clean build :library:checkKotlinAbi --warning-mode all --console=plain
         env:
           ORG_GRADLE_PROJECT_javaVersion: ${{ matrix.java-version }}
+      - name: Stage canonical publication
+        if: matrix.java-version == 21
+        run: |
+          mise exec -- ./gradlew :library:publishAllPublicationsToVerificationRepository "-Pversion=$STAGED_VERSION" --console=plain
+          python3 .github/scripts/ci_results.py stage
+      - name: Upload canonical publication
+        if: matrix.java-version == 21
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: staged-host-21-${{ github.sha }}
+          path: |
+            build/verification-repository
+            build/staged-identity.json
+          if-no-files-found: error
+      - name: Collect host results
+        if: always()
+        env:
+          LANE: host-${{ matrix.java-version }}
+        run: |
+          mkdir -p build/host-results/library build/host-results/example
+          cp -r library/build/test-results build/host-results/library/
+          cp -r example-project/build/test-results build/host-results/example/
+          python3 .github/scripts/ci_results.py record "$LANE" build/host-results
+      - name: Upload host results
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: results-host-${{ matrix.java-version }}-${{ github.sha }}
+          path: build/ci-results/host-${{ matrix.java-version }}
+          if-no-files-found: error
       - name: Publish Test Report
         uses: scacap/action-surefire-report@c38a2d74b9840ae8950a4387ae02b637421d0f39 # v1.13.0
         if: failure()
@@ -36,3 +92,159 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           report_paths: '**/build/test-results/test/TEST-*.xml'
           check_name: Test Failures (${{ matrix.java-version }})
+
+  abi:
+    name: Public ABI
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - name: Check ABI
+        run: |
+          mise exec -- ./gradlew :library:checkKotlinAbi --warning-mode all --console=plain
+          python3 .github/scripts/ci_results.py record abi library/build
+          printf '%s\n' "$GITHUB_SHA" > build/ci-results/abi/abi.txt
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: results-abi-${{ github.sha }}
+          path: build/ci-results/abi
+          if-no-files-found: error
+
+  runtime:
+    name: TestKit (${{ matrix.gradle }}, JVM 21)
+    needs: [versions, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        gradle: ${{ fromJSON(needs.versions.outputs.gradle) }}
+    env:
+      GRADLE_VERSION: ${{ matrix.gradle }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: staged-host-21-${{ github.sha }}
+          path: build
+      - name: Verify staged identity
+        run: python3 .github/scripts/ci_results.py check-stage
+      - name: Check runtime and configuration cache reuse
+        run: |
+          args=(
+            -p compatibility-tests check
+            "-PstagedRepository=$GITHUB_WORKSPACE/build/verification-repository"
+            "-PtestedLibraryVersion=$STAGED_VERSION"
+            "-PcompatibilityGradleVersion=$GRADLE_VERSION"
+            "-PcompatibilityBuildDir=$GITHUB_WORKSPACE/build/compatibility/$GRADLE_VERSION/build"
+            "--project-cache-dir=$GITHUB_WORKSPACE/build/compatibility/$GRADLE_VERSION/project-cache"
+            --console=plain
+          )
+          mise exec java@temurin-21 "gradle@$GRADLE_VERSION" -- gradle "${args[@]}"
+          mise exec java@temurin-21 "gradle@$GRADLE_VERSION" -- gradle "${args[@]}" | tee configuration-cache.log
+          grep -q 'Reusing configuration cache.' configuration-cache.log
+      - name: Collect runtime results
+        if: always()
+        run: python3 .github/scripts/ci_results.py record "runtime-$GRADLE_VERSION" "build/compatibility/$GRADLE_VERSION/build"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: results-runtime-${{ matrix.gradle }}-${{ github.sha }}
+          path: build/ci-results/runtime-${{ matrix.gradle }}
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: diagnostics-runtime-${{ matrix.gradle }}-${{ github.sha }}
+          path: |
+            build/compatibility/${{ matrix.gradle }}/build/reports
+            configuration-cache.log
+          if-no-files-found: error
+
+  kotlin:
+    name: Kotlin (${{ matrix.kotlin }}, JVM 21)
+    needs: [versions, build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        kotlin: ${{ fromJSON(needs.versions.outputs.kotlin) }}
+    env:
+      KOTLIN_VERSION: ${{ matrix.kotlin }}
+      GRADLE_VERSION: ${{ needs.versions.outputs.consumer-gradle }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: staged-host-21-${{ github.sha }}
+          path: build
+      - name: Verify staged identity
+        run: python3 .github/scripts/ci_results.py check-stage
+      - name: Check compiler and configuration cache reuse
+        run: |
+          args=(
+            -p compatibility-tests/kotlin-consumer verifyConsumer
+            "-PconsumerKotlinVersion=$KOTLIN_VERSION"
+            "-PconsumerBuildDir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/build"
+            "-PstagedRepository=$GITHUB_WORKSPACE/build/verification-repository"
+            "-PtestedLibraryVersion=$STAGED_VERSION"
+            "--project-cache-dir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/project-cache"
+            --console=plain
+          )
+          mise exec java@temurin-21 "gradle@$GRADLE_VERSION" -- gradle "${args[@]}"
+          mise exec java@temurin-21 "gradle@$GRADLE_VERSION" -- gradle "${args[@]}" | tee configuration-cache.log
+          grep -q 'Reusing configuration cache.' configuration-cache.log
+          mise exec java@temurin-21 "gradle@$GRADLE_VERSION" -- gradle \
+            -p compatibility-tests/kotlin-consumer dependencies --configuration runtimeClasspath \
+            "-PconsumerKotlinVersion=$KOTLIN_VERSION" \
+            "-PconsumerBuildDir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/build" \
+            "-PstagedRepository=$GITHUB_WORKSPACE/build/verification-repository" \
+            "-PtestedLibraryVersion=$STAGED_VERSION" \
+            "--project-cache-dir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/project-cache" \
+            --console=plain > dependencies.log
+      - name: Collect compiler results
+        if: always()
+        run: python3 .github/scripts/ci_results.py record "kotlin-$KOTLIN_VERSION" "build/kotlin-consumer/$KOTLIN_VERSION/build"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: results-kotlin-${{ matrix.kotlin }}-${{ github.sha }}
+          path: build/ci-results/kotlin-${{ matrix.kotlin }}
+          if-no-files-found: error
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: diagnostics-kotlin-${{ matrix.kotlin }}-${{ github.sha }}
+          path: |
+            configuration-cache.log
+            dependencies.log
+          if-no-files-found: error
+
+  aggregate:
+    name: Compatibility verified
+    if: always()
+    needs: [build, abi, runtime, kotlin]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          path: build/downloaded-results
+      - name: Require every lane and its XML evidence
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: python3 .github/scripts/ci_results.py aggregate build/downloaded-results
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: verified-${{ github.sha }}
+          path: build/ci-summary.json
+          if-no-files-found: error
