@@ -68,11 +68,13 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 	verifyStaged(candidate, resolve("build/verification-repository"));
 	const prefix = `de/joshuagleitze/atrium-gradle-testkit/${candidate.version}/`;
 	const api = github(env.GITHUB_REPOSITORY, env.GH_TOKEN);
+	// Written by the rebuild from the URL that Gradle publishes to, so that reads and writes address the same repository
+	const packagesRepository = readFileSync(resolve("build/release/github-packages-repository-url"), "utf8");
 	const plan = await recoveryPlan(candidate, {
 		api,
 		central: (name) => get(`https://repo.maven.apache.org/maven2/${prefix}${name}`),
 		packages: (name) => get(
-			`https://maven.pkg.github.com/${env.GITHUB_REPOSITORY.toLowerCase()}/${prefix}${name}`,
+			`${packagesRepository}/${prefix}${name}`,
 			`Basic ${Buffer.from(`${env.GITHUB_ACTOR}:${env.GH_TOKEN}`).toString("base64")}`,
 		),
 	});

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
-import { readFileSync, symlinkSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -144,7 +144,16 @@ for (const kind of ["partial", "mismatch", "unsigned"]) {
 
 test("rebuilt artifacts must match reviewed candidate bytes", (t) => {
 	const f = fixture(t);
-	assert.throws(() => verifyStaged(verifyCandidate(f.directory, f.release), f.directory));
+	const candidate = verifyCandidate(f.directory, f.release);
+	const repository = join(f.directory, "staging");
+	const staged = join(repository, "de/joshuagleitze/atrium-gradle-testkit", f.release.version);
+	mkdirSync(staged, { recursive: true });
+	for (const name of Object.keys(candidate.manifest.artifacts)) copyFileSync(join(f.directory, name), join(staged, name));
+	verifyStaged(candidate, repository);
+
+	const altered = artifactNames(f.release.version)[0];
+	writeFileSync(join(staged, altered), "rebuilt with different bytes");
+	assert.throws(() => verifyStaged(candidate, repository), new RegExp(`rebuilt artifact differs from candidate: ${altered}`));
 });
 
 test("source identity never authorizes a production publication", (t) => {

@@ -69,7 +69,9 @@ Upload-only Vanniktech staging does not invoke the automatic-publishing task, so
 ## Same-version recovery
 
 Re-dispatch the same tag/SHA, or re-run the failed job, after checking the partial destination state. Each destination
-is read before any writes. A complete version must match all five candidate hashes and have signatures, then is
+is read before any writes. GitHub Packages is read from the URL that the rebuild writes to
+`build/release/github-packages-repository-url`, which is the URL Gradle publishes to (with the lowercase owner GitHub
+Packages requires). A complete version must match all five candidate hashes and have signatures, then is
 skipped. A partial version or differing hash stops for reconciliation; no immutable Central artifact is overwritten.
 Existing GitHub releases must have the same SHA and exact reviewed notes and are left alone. Pages is redeployed.
 

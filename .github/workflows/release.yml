@@ -98,6 +98,7 @@ jobs:
         run: |
           timeout --foreground 1800 mise exec -- ./gradlew build :library:checkKotlinAbi \
             :library:publishAllPublicationsToVerificationRepository :library:dokkaGeneratePublicationHtml \
+            :library:writeGithubPackagesRepositoryUrl \
             "-Pversion=$RELEASE_VERSION" "-PreleaseTag=$RELEASE_TAG" \
             -PremotePublicationApproved=false \
             --no-build-cache --no-configuration-cache --warning-mode all --console=plain
