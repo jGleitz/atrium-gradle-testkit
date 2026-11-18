@@ -7,6 +7,7 @@
 The v2 library uses the single coordinate `de.joshuagleitze:atrium-gradle-testkit`, replacing the
 `atrium-gradle-testkit-fluent-en`, `atrium-gradle-testkit-logic` and `atrium-gradle-testkit-translation-en` artifacts.
 The Kotlin package remains `de.joshuagleitze.test.gradle`.
+Coming from 1.x? [MIGRATION.md](./MIGRATION.md) lists every renamed and removed API, and [CHANGELOG.md](./CHANGELOG.md) summarizes 2.0.0.
 
 This library does not publish Gradle TestKit as a dependency, so consumers must declare it themselves. The example does this in [`example-project/build.gradle.kts`](./example-project/build.gradle.kts):
 
