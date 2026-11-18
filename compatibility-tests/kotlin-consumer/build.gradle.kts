@@ -59,6 +59,15 @@ abstract class RunConsumerProbe @Inject constructor(private val execOperations: 
  * artifact, so that a build that merely prints the sentinel is not mistaken for library consumption.
  */
 abstract class VerifyConsumer : DefaultTask() {
+	@get:Input
+	abstract val compilerVersion: Property<String>
+
+	@get:Input
+	abstract val distributionVersion: Property<String>
+
+	@get:OutputFile
+	abstract val resultXml: RegularFileProperty
+
 	@get:InputFile
 	abstract val probeOutput: RegularFileProperty
 
@@ -81,6 +90,24 @@ abstract class VerifyConsumer : DefaultTask() {
 		}
 		val sha256 = MessageDigest.getInstance("SHA-256").digest(library.readBytes()).joinToString("") { "%02x".format(it) }
 		logger.lifecycle("CONSUMER_LIBRARY_SHA256=$sha256")
+		val checks = lines.single { it.startsWith("CONSUMER_CHECKS=") }.substringAfter("=").toInt()
+		check(checks > 0) { "The consumer executed no behavioral checks" }
+		val javaVersion = lines.single { it.startsWith("CONSUMER_JVM=") }.substringAfter("=")
+		check(Runtime.Version.parse(javaVersion).feature() == 21) { "The consumer must run on JVM 21" }
+		resultXml.get().asFile.apply { parentFile.mkdirs() }.writeText(
+			"""
+			<testsuite name="KotlinConsumer" tests="1" failures="0" errors="0" skipped="0">
+			  <properties>
+			    <property name="compilerVersion" value="${compilerVersion.get()}"/>
+			    <property name="gradleVersion" value="${distributionVersion.get()}"/>
+			    <property name="javaVersion" value="$javaVersion"/>
+			    <property name="libraryJarSha256" value="$sha256"/>
+			    <property name="behavioralChecks" value="$checks"/>
+			  </properties>
+			  <testcase name="all public signatures and behavioral probes" classname="KotlinConsumer"/>
+			</testsuite>
+			""".trimIndent()
+		)
 	}
 
 	private companion object {
@@ -100,6 +127,9 @@ tasks.register<VerifyConsumer>("verifyConsumer") {
 	description = "Compiles and runs the consumer probe and verifies that it consumed the staged library successfully."
 	group = LifecycleBasePlugin.VERIFICATION_GROUP
 	dependsOn(tasks.compileKotlin)
+	compilerVersion = providers.gradleProperty("consumerKotlinVersion")
+	distributionVersion = gradle.gradleVersion
+	resultXml = layout.buildDirectory.file("test-results/verifyConsumer/TEST-consumer.xml")
 	probeOutput = runConsumerProbe.flatMap { it.probeOutput }
 	libraryArtifact.from(
 		configurations.runtimeClasspath.map { classpath ->

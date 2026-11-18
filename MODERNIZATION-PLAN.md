@@ -44,7 +44,7 @@ This table records the starting point of the modernization; it is not kept curre
 | 14. Run one shared suite under both TestKit clients | **done** - merged in #204 (`f9ac1d7`); evidence in `14/` |
 | 15. Verify minimum and current Kotlin consumers | **done** - merged in #206 (`3b5e08f`); evidence in `15/` |
 | 16. Gate production coverage independently per runtime | **in progress** - each runtime row's `check` (Gradle 8 and Gradle 9 TestKit) requires zero missed instructions and branches of the staged JAR; awaiting review/merge; evidence in `16/` |
-| 17. Add explicit compiler and TestKit CI lanes | not started |
+| 17. Add explicit compiler and TestKit CI lanes | **in progress** - host 21/25/27, ABI, mise-derived TestKit and minimum/current Kotlin lanes share one staged artifact; XML/provenance aggregate awaiting CI proof and owner approval to become required; evidence in `17/`. Runtime `check` picks up package 16 coverage after it merges. |
 | 18. Replace Surefire reporting with complete artifact reports | not started |
 | 19. Submit the trusted main dependency graph | **done** - merged in #202 (`fa7886d`); evidence in `19/` |
 | 20. Publishable docs with executable migration samples | **done** - merged in #210 (`eb47e7d`); evidence in `20/` |
