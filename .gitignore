@@ -13,3 +13,6 @@ build/
 /.omo/
 /.codegraph/
 
+### Python
+__pycache__/
+

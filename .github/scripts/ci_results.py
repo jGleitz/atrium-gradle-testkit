@@ -15,7 +15,6 @@ from typing import Final
 import xml.etree.ElementTree as ET
 
 ROOT: Final = Path(__file__).resolve().parents[2]
-VERSION: Final = "2.0.0-dev"
 
 
 class InvalidEvidence(RuntimeError):
@@ -27,8 +26,11 @@ def require(condition: bool, message: str) -> None:
         raise InvalidEvidence(message)
 
 
-def matrix() -> dict[str, list[str]]:
-    """Read each version from its production owner, including the Kotlin floor."""
+def matrix() -> dict[str, list[str] | str]:
+    """Read each version from its production owner, including the Kotlin floor.
+
+    Kotlin consumers run on the Gradle 8 distribution that mise.toml declares.
+    """
     tools = tomllib.loads((ROOT / "mise.toml").read_text())["tools"]
     catalog = tomllib.loads((ROOT / "gradle/buildLibs.versions.toml").read_text())
     properties = dict(
@@ -37,7 +39,10 @@ def matrix() -> dict[str, list[str]]:
     )
     floor = properties["kotlinReleaseVersion"].strip() + ".0"
     current = catalog["libraries"]["plugin-kotlin-jvm"].rsplit(":", 1)[1]
-    return {"gradle": tools["gradle"], "kotlin": list(dict.fromkeys([floor, current]))}
+    consumer = [v for v in tools["gradle"] if v.split(".")[0] == "8"]
+    require(len(consumer) == 1, "mise.toml must declare exactly one Gradle 8 distribution")
+    return {"gradle": tools["gradle"], "kotlin": list(dict.fromkeys([floor, current])),
+            "consumer-gradle": consumer[0]}
 
 
 def expected_lanes() -> list[str]:
@@ -53,7 +58,7 @@ def digest(path: Path) -> str:
 
 def staged_identity() -> dict[str, str]:
     repository = ROOT / "build/verification-repository"
-    jars = list(repository.glob(f"**/atrium-gradle-testkit-{VERSION}.jar"))
+    jars = list(repository.glob(f"**/atrium-gradle-testkit-{os.environ['STAGED_VERSION']}.jar"))
     require(len(jars) == 1, "Expected exactly one staged production JAR")
     return {"sourceSha": os.environ["GITHUB_SHA"], "libraryJarSha256": digest(jars[0])}
 
@@ -92,8 +97,10 @@ def validate(directory: Path, sha: str, needs: dict[str, dict[str, str]]) -> lis
         require(job["result"] == "success", f"{name}: job result is {job['result']}")
     identities = list(directory.glob("staged-*/staged-identity.json"))
     require(len(identities) == 1, "Missing or duplicate staged identity")
+    require(identities[0].parent.name == f"staged-host-21-{sha}", "Staged artifact named for another SHA")
     identity = json.loads(identities[0].read_text())
     require(identity["sourceSha"] == sha, "Staged source SHA mismatch")
+    consumer_gradle = matrix()["consumer-gradle"]
     results = []
     for lane in expected_lanes():
         artifact = directory / f"results-{lane}-{sha}"
@@ -106,6 +113,9 @@ def validate(directory: Path, sha: str, needs: dict[str, dict[str, str]]) -> lis
             continue
         xmls = list(artifact.rglob("TEST-*.xml"))
         require(bool(xmls), f"{lane}: missing XML results")
+        if lane.startswith("host-"):
+            for suite in ["library", "example"]:
+                require(any((artifact / suite).rglob("TEST-*.xml")), f"{lane}: missing {suite} XML results")
         count = 0
         for xml in xmls:
             root = ET.parse(xml).getroot()
@@ -132,6 +142,7 @@ def validate(directory: Path, sha: str, needs: dict[str, dict[str, str]]) -> lis
             require(all(runtime[key] == version for key in
                         ["selectedGradleVersion", "daemonGradleVersion", "fixtureGradleVersion"]),
                     f"{lane}: wrong client version")
+            require(bool(runtime["testKitClientCodeSources"]), f"{lane}: missing client code sources")
             require(all(Path(p).name == f"gradle-test-kit-{version}.jar"
                         for p in runtime["testKitClientCodeSources"].values()),
                     f"{lane}: wrong client code source")
@@ -147,8 +158,7 @@ def validate(directory: Path, sha: str, needs: dict[str, dict[str, str]]) -> lis
                     f"{lane}: wrong compiler")
             require(properties["libraryJarSha256"] == identity["libraryJarSha256"],
                     f"{lane}: compiler consumed another JAR")
-            require(properties["gradleVersion"] in matrix()["gradle"],
-                    f"{lane}: undeclared Gradle distribution")
+            require(properties["gradleVersion"] == consumer_gradle, f"{lane}: wrong Gradle distribution")
             require(properties["javaVersion"].split(".")[0] == "21", f"{lane}: wrong JVM")
             require(int(properties["behavioralChecks"]) > 0, f"{lane}: no behavioral probes")
         results.append({"lane": lane, "tests": count, "artifact": artifact.name})
@@ -161,7 +171,7 @@ def main() -> None:
             versions = matrix()
             print("gradle=" + json.dumps(versions["gradle"]))
             print("kotlin=" + json.dumps(versions["kotlin"]))
-            print("consumer-gradle=" + min(versions["gradle"], key=lambda v: tuple(map(int, v.split(".")))))
+            print("consumer-gradle=" + versions["consumer-gradle"])
         case ["stage"]:
             stage()
         case ["check-stage"]:

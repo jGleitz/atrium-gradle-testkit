@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  STAGED_VERSION: 2.0.0-dev
+
 defaults:
   run:
     shell: bash
@@ -30,6 +33,9 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    permissions:
+      contents: read
+      checks: write # scacap/action-surefire-report creates the failure check run
     strategy:
       matrix:
         java-version: [ 21, 25, 27 ]
@@ -52,7 +58,7 @@ jobs:
       - name: Stage canonical publication
         if: matrix.java-version == 21
         run: |
-          mise exec -- ./gradlew :library:publishAllPublicationsToVerificationRepository -Pversion=2.0.0-dev --console=plain
+          mise exec -- ./gradlew :library:publishAllPublicationsToVerificationRepository "-Pversion=$STAGED_VERSION" --console=plain
           python3 .github/scripts/ci_results.py stage
       - name: Upload canonical publication
         if: matrix.java-version == 21
@@ -133,7 +139,7 @@ jobs:
           args=(
             -p compatibility-tests check
             "-PstagedRepository=$GITHUB_WORKSPACE/build/verification-repository"
-            -PtestedLibraryVersion=2.0.0-dev
+            "-PtestedLibraryVersion=$STAGED_VERSION"
             "-PcompatibilityGradleVersion=$GRADLE_VERSION"
             "-PcompatibilityBuildDir=$GITHUB_WORKSPACE/build/compatibility/$GRADLE_VERSION/build"
             "--project-cache-dir=$GITHUB_WORKSPACE/build/compatibility/$GRADLE_VERSION/project-cache"
@@ -189,7 +195,7 @@ jobs:
             "-PconsumerKotlinVersion=$KOTLIN_VERSION"
             "-PconsumerBuildDir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/build"
             "-PstagedRepository=$GITHUB_WORKSPACE/build/verification-repository"
-            -PtestedLibraryVersion=2.0.0-dev
+            "-PtestedLibraryVersion=$STAGED_VERSION"
             "--project-cache-dir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/project-cache"
             --console=plain
           )
@@ -201,7 +207,7 @@ jobs:
             "-PconsumerKotlinVersion=$KOTLIN_VERSION" \
             "-PconsumerBuildDir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/build" \
             "-PstagedRepository=$GITHUB_WORKSPACE/build/verification-repository" \
-            -PtestedLibraryVersion=2.0.0-dev \
+            "-PtestedLibraryVersion=$STAGED_VERSION" \
             "--project-cache-dir=$GITHUB_WORKSPACE/build/kotlin-consumer/$KOTLIN_VERSION/project-cache" \
             --console=plain > dependencies.log
       - name: Collect compiler results
